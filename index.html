@@ -30,6 +30,8 @@
         .kanban-column { min-width: 280px; max-height: 100%; background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; }
         .col-header { color: white; font-weight: bold; margin-bottom: 12px; font-size: 0.95rem; text-shadow: 1px 1px 2px black; flex-shrink: 0; }
         .kanban-list { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
+        .kanban-list::-webkit-scrollbar { width: 4px; }
+        .kanban-list::-webkit-scrollbar-thumb { background: var(--primary-pink); border-radius: 10px; }
 
         .kanban-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); border-left: 5px solid transparent; }
         .kanban-card.type-음식점 { border-left-color: var(--food-red); }
@@ -40,7 +42,6 @@
         .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; margin-bottom: 6px; display: inline-block; }
         .tag-음식점 { background: var(--food-red); } .tag-카페 { background: var(--cafe-yellow); color: #333; } .tag-명소 { background: var(--spot-blue); } .tag-쇼핑 { background: var(--shop-purple); }
         
-        /* desc 직접 수정 스타일 */
         .desc { 
             font-size: 0.8rem; color: #666; margin-top: 6px; line-height: 1.4; 
             padding: 4px; border-radius: 4px; border: 1px dashed transparent; transition: 0.2s;
@@ -54,8 +55,6 @@
         .btn-map-link { font-size: 0.75rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 4px 8px; border-radius: 6px; }
 
         .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; }
-        .map-wrapper { width: 100%; height: 300px; border-radius: 15px; overflow: hidden; border: 2px solid white; background: #eee; }
-        .map-wrapper iframe { width: 100%; height: 100%; border: none; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
         .overlay.active { display: block; }
     </style>
@@ -76,7 +75,6 @@
     <div id="home" class="section active">
         <h1>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</h1>
         <div class="card"><span class="summary-title">⛅ 실시간 날씨</span><a href="https://www.weather.gov.hk/tc/index.html" target="_blank" class="main-btn">홍콩 기상청 열기</a></div>
-        <div class="card" onclick="showSection('map')"><div class="map-wrapper"><iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F"></iframe></div></div>
         <div class="card"><span class="summary-title">📝 일정 요약</span><div id="home-summary"></div></div>
     </div>
 
@@ -91,17 +89,17 @@
         </div>
     </div>
 
-    <div id="map" class="section"><h1>📍 홍콩 지도</h1><div class="card"><div class="map-wrapper"><iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F"></iframe></div></div></div>
+    <div id="map" class="section"><h1>📍 홍콩 지도</h1><div class="card"><div class="map-wrapper"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m14.16!22.28!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3403ff8080f5c0c9%3A0x280e224e7587126!2z66as7KCV!5e0!3m2!1sko!2skr!4v1711234567890"></iframe></div></div></div>
     <div id="check" class="section"><h1>🎒 체크리스트</h1><div class="card"><div id="checkListContainer"></div></div></div>
 
     <script>
         const SUPABASE_URL = 'https://sirhztixtrpafzwwbbqn.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpcmh6dGl4dHJwYWZ6d3diYnFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTQxOTAsImV4cCI6MjA5MTAzMDE5MH0._akRINb0wdm94yhWhsfDhnVfAD80WD4Eo-hmbEuB_5M';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const TABLE_NAME = 'hongkong2026'; // 테이블명 수정
 
         let tripData = [];
 
-        // 🚀 DB가 비었을 때 자동으로 채워줄 실제 32개 데이터
         const initialData = [
             { name: "란퐁유엔 소호점", cat: "음식점", desc: "📍 셩완 | 스타킹 밀크티의 원조", status: "wait" },
             { name: "Wah Lok Cafe", cat: "카페", desc: "📍 셩완 | 로컬 느낌 가득한 카페", status: "wait" },
@@ -115,13 +113,13 @@
             { name: "원 딤섬", cat: "음식점", desc: "📍 몽콕 | 가성비 딤섬 최고", status: "wait" },
             { name: "Oi Man Sang", cat: "음식점", desc: "📍 삼수이포 | 노천 다이파이동", status: "wait" },
             { name: "Blue Bottle Coffee", cat: "카페", desc: "📍 셩완 | 통창 뷰 블루보틀", status: "wait" },
-            { name: "Kowloon Taproom", cat: "음식점", desc: "📍 침사추이 | 수제 맥주 펍", status: "wait" },
             { name: "미드레벨 에스컬레이터", cat: "명소", desc: "📍 센트럴 | 중경상림 촬영지", status: "wait" },
             { name: "익청빌딩", cat: "명소", desc: "📍 홍콩 섬 | 트랜스포머 촬영지", status: "wait" },
             { name: "피크트램", cat: "명소", desc: "📍 센트럴 | 빅토리아 피크 야경", status: "wait" },
             { name: "하버시티", cat: "쇼핑", desc: "📍 침사추이 | 초대형 쇼핑몰", status: "wait" },
             { name: "Kennedy Town", cat: "명소", desc: "📍 케네디타운 | 일몰 명소", status: "wait" },
             { name: "카우키", cat: "음식점", desc: "📍 셩완 | 소고기 국수 성지", status: "wait" },
+            { name: "Kowloon Taproom", cat: "음식점", desc: "📍 침사추이 | 수제 맥주 펍", status: "wait" },
             { name: "스타페리", cat: "명소", desc: "📍 침사추이 | 홍콩 필수 유람선", status: "wait" },
             { name: "제니쿠키", cat: "쇼핑", desc: "📍 침사추이 | 마약쿠키 기념품", status: "wait" },
             { name: "란콰이퐁", cat: "명소", desc: "📍 센트럴 | 밤문화 거리", status: "wait" },
@@ -142,15 +140,12 @@
         function goMap(name) { window.open(`https://www.google.com/maps/search/${encodeURIComponent(name + " Hong Kong")}`, '_blank'); }
 
         async function loadData() {
-            const { data, error } = await sb.from('trips').select('*').order('created_at', { ascending: true });
+            const { data, error } = await sb.from(TABLE_NAME).select('*').order('created_at', { ascending: true });
             
-            // 💡 만약 데이터가 아예 없다면 초기 데이터 자동 삽입
             if (data && data.length === 0) {
-                console.log("데이터 비어있음. 초기화 중...");
-                const { error: insertError } = await sb.from('trips').insert(initialData);
-                if (!insertError) {
-                    location.reload(); // 성공 시 새로고침하여 데이터 로드
-                }
+                console.log("초기 데이터 삽입 시도...");
+                const { error: insErr } = await sb.from(TABLE_NAME).insert(initialData);
+                if (!insErr) loadData();
             } else if (data) {
                 tripData = data;
                 renderKanban();
@@ -158,12 +153,11 @@
         }
 
         async function moveCard(id, status) {
-            await sb.from('trips').update({ status }).eq('id', id);
+            await sb.from(TABLE_NAME).update({ status }).eq('id', id);
         }
 
         async function updateDesc(id, newDesc) {
-            const cleanDesc = newDesc.trim();
-            const { error } = await sb.from('trips').update({ desc: cleanDesc }).eq('id', id);
+            await sb.from(TABLE_NAME).update({ desc: newDesc.trim() }).eq('id', id);
         }
 
         function renderKanban() {
@@ -204,8 +198,8 @@
             sum.innerHTML = planned.length ? planned.map(t => `<div style="font-size:0.9rem; margin-bottom:8px; padding-left:10px; border-left:3px solid var(--primary-pink);">📌 [${t.status.toUpperCase()}] ${t.name}</div>`).join('') : '<div style="color:#888; text-align:center;">일정을 배치해보세요!</div>';
         }
 
-        // 실시간 업데이트 구독
-        sb.channel('public:trips').on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, loadData).subscribe();
+        // 실시간 업데이트 구독 (테이블명 반영)
+        sb.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, loadData).subscribe();
 
         window.onload = () => { loadData(); };
     </script>
