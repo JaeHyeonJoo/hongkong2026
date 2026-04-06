@@ -16,7 +16,6 @@
             background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Chungking Express.jpg') no-repeat center center fixed; 
             background-size: cover; min-height: 100vh; color: #333; overflow-x: hidden;
         }
-        /* 사이드바 및 레이아웃 생략 (기존과 동일) */
         .menu-btn { position: fixed; top: 15px; left: 15px; z-index: 1000; font-size: 1.8rem; color: white; cursor: pointer; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background: #fff0f3; z-index: 1001; transition: 0.3s; padding: 60px 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
         .sidebar.active { left: 0; }
@@ -41,24 +40,19 @@
         .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; margin-bottom: 6px; display: inline-block; }
         .tag-음식점 { background: var(--food-red); } .tag-카페 { background: var(--cafe-yellow); color: #333; } .tag-명소 { background: var(--spot-blue); } .tag-쇼핑 { background: var(--shop-purple); }
         
-        /* 💡 desc 편집 가능 스타일 */
-        .editable-desc { 
-            font-size: 0.85rem; color: #444; margin-top: 8px; line-height: 1.4; 
+        /* desc 직접 수정 스타일 */
+        .desc { 
+            font-size: 0.8rem; color: #666; margin-top: 6px; line-height: 1.4; 
             padding: 4px; border-radius: 4px; border: 1px dashed transparent; transition: 0.2s;
             cursor: text; min-height: 1.2em;
         }
-        .editable-desc:hover { border-color: var(--primary-pink); background: #fff9fb; }
-        .editable-desc:focus { border-style: solid; border-color: var(--kitty-red); background: #fff; outline: none; }
-
+        .desc:hover { border-color: var(--primary-pink); background: #fff9fb; }
+        .desc:focus { border-style: solid; border-color: var(--kitty-red); background: white; outline: none; }
+        
         .card-ctrl { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
         .move-sel { font-size: 0.75rem; padding: 5px; border-radius: 6px; flex: 1; border: 1px solid #ddd; }
         .btn-map-link { font-size: 0.75rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 4px 8px; border-radius: 6px; }
 
-        .check-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .check-content { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; }
-        .check-content input { width: 22px; height: 22px; accent-color: var(--kitty-red); }
-        .del-check { color: #ccc; border: none; background: none; font-size: 1.3rem; cursor: pointer; }
-        .checked-text span { text-decoration: line-through; color: #aaa; }
         .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; }
         .map-wrapper { width: 100%; height: 300px; border-radius: 15px; overflow: hidden; border: 2px solid white; background: #eee; }
         .map-wrapper iframe { width: 100%; height: 100%; border: none; }
@@ -74,7 +68,7 @@
     <div class="sidebar" id="sidebar">
         <h3 style="text-align:center; color:var(--kitty-red); font-weight:900;">HK 2026 🎬</h3>
         <div class="nav-item" onclick="showSection('home')">🏠 메인 홈</div>
-        <div class="nav-item" onclick="showSection('kanban')">📋 일정 보드</div>
+        <div class="nav-item" onclick="showSection('kanban')">📋 일정 보드 (32곳)</div>
         <div class="nav-item" onclick="showSection('map')">📍 홍콩 지도</div>
         <div class="nav-item" onclick="showSection('check')">🎒 체크리스트</div>
     </div>
@@ -107,30 +101,69 @@
 
         let tripData = [];
 
+        // 🚀 DB가 비었을 때 자동으로 채워줄 실제 32개 데이터
+        const initialData = [
+            { name: "란퐁유엔 소호점", cat: "음식점", desc: "📍 셩완 | 스타킹 밀크티의 원조", status: "wait" },
+            { name: "Wah Lok Cafe", cat: "카페", desc: "📍 셩완 | 로컬 느낌 가득한 카페", status: "wait" },
+            { name: "하프웨이 커피", cat: "카페", desc: "📍 셩완 | 빈티지 컵 맛집", status: "wait" },
+            { name: "상기콘지", cat: "음식점", desc: "📍 셩완 | 홍콩식 아침 죽 맛집", status: "wait" },
+            { name: "Fiata Pizza", cat: "음식점", desc: "📍 셩완 | 정통 나폴리 피자", status: "wait" },
+            { name: "E N", cat: "음식점", desc: "📍 셩완 | 현지 맛집", status: "wait" },
+            { name: "베이크하우스", cat: "카페", desc: "📍 셩완 | 에그타르트 성지", status: "wait" },
+            { name: "Mason Pocket", cat: "음식점", desc: "📍 셩완 | 아기자기한 식당", status: "wait" },
+            { name: "침차이키", cat: "음식점", desc: "📍 셩완 | 미슐랭 완탕면", status: "wait" },
+            { name: "원 딤섬", cat: "음식점", desc: "📍 몽콕 | 가성비 딤섬 최고", status: "wait" },
+            { name: "Oi Man Sang", cat: "음식점", desc: "📍 삼수이포 | 노천 다이파이동", status: "wait" },
+            { name: "Blue Bottle Coffee", cat: "카페", desc: "📍 셩완 | 통창 뷰 블루보틀", status: "wait" },
+            { name: "Kowloon Taproom", cat: "음식점", desc: "📍 침사추이 | 수제 맥주 펍", status: "wait" },
+            { name: "미드레벨 에스컬레이터", cat: "명소", desc: "📍 센트럴 | 중경상림 촬영지", status: "wait" },
+            { name: "익청빌딩", cat: "명소", desc: "📍 홍콩 섬 | 트랜스포머 촬영지", status: "wait" },
+            { name: "피크트램", cat: "명소", desc: "📍 센트럴 | 빅토리아 피크 야경", status: "wait" },
+            { name: "하버시티", cat: "쇼핑", desc: "📍 침사추이 | 초대형 쇼핑몰", status: "wait" },
+            { name: "Kennedy Town", cat: "명소", desc: "📍 케네디타운 | 일몰 명소", status: "wait" },
+            { name: "카우키", cat: "음식점", desc: "📍 셩완 | 소고기 국수 성지", status: "wait" },
+            { name: "스타페리", cat: "명소", desc: "📍 침사추이 | 홍콩 필수 유람선", status: "wait" },
+            { name: "제니쿠키", cat: "쇼핑", desc: "📍 침사추이 | 마약쿠키 기념품", status: "wait" },
+            { name: "란콰이퐁", cat: "명소", desc: "📍 센트럴 | 밤문화 거리", status: "wait" },
+            { name: "타이퀀", cat: "명소", desc: "📍 센트럴 | 복합문화공간", status: "wait" },
+            { name: "PMQ", cat: "명소", desc: "📍 센트럴 | 예술 소품샵", status: "wait" },
+            { name: "웡치케이", cat: "음식점", desc: "📍 센트럴 | 완탕면 맛집", status: "wait" },
+            { name: "레이가든", cat: "음식점", desc: "📍 침사추이 | 미슐랭 딤섬", status: "wait" },
+            { name: "너츠포드 테라스", cat: "명소", desc: "📍 침사추이 | 홍콩의 이태원", status: "wait" },
+            { name: "초이홍 아파트", cat: "명소", desc: "📍 구룡 | 인생샷 성지", status: "wait" },
+            { name: "M+ 뮤지엄", cat: "명소", desc: "📍 구룡 | 현대 미술관", status: "wait" },
+            { name: "서구룡 문화지구", cat: "명소", desc: "📍 구룡 | 바다 산책로", status: "wait" },
+            { name: "싱흥유엔", cat: "음식점", desc: "📍 셩완 | 토마토 라면", status: "wait" },
+            { name: "제니베이커리 셩완", cat: "쇼핑", desc: "📍 셩완 | 쿠키 쇼핑", status: "wait" }
+        ];
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.overlay').classList.toggle('active'); }
         function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar(); updateDashboard(); }
         function goMap(name) { window.open(`https://www.google.com/maps/search/${encodeURIComponent(name + " Hong Kong")}`, '_blank'); }
 
         async function loadData() {
             const { data, error } = await sb.from('trips').select('*').order('created_at', { ascending: true });
-            if (data) { tripData = data; renderKanban(); }
+            
+            // 💡 만약 데이터가 아예 없다면 초기 데이터 자동 삽입
+            if (data && data.length === 0) {
+                console.log("데이터 비어있음. 초기화 중...");
+                const { error: insertError } = await sb.from('trips').insert(initialData);
+                if (!insertError) {
+                    location.reload(); // 성공 시 새로고침하여 데이터 로드
+                }
+            } else if (data) {
+                tripData = data;
+                renderKanban();
+            }
         }
 
         async function moveCard(id, status) {
             await sb.from('trips').update({ status }).eq('id', id);
         }
 
-        // 📝 특징(desc) 수정 함수
         async function updateDesc(id, newDesc) {
-            const originalData = tripData.find(t => t.id === id);
-            // 내용이 이전과 같으면 업데이트하지 않음
-            if (originalData.desc === newDesc.trim()) return;
-
-            const { error } = await sb.from('trips').update({ desc: newDesc.trim() }).eq('id', id);
-            if (error) {
-                alert("수정에 실패했습니다. 다시 시도해주세요.");
-                loadData(); // 실패 시 원래 데이터로 복구
-            }
+            const cleanDesc = newDesc.trim();
+            const { error } = await sb.from('trips').update({ desc: cleanDesc }).eq('id', id);
         }
 
         function renderKanban() {
@@ -143,10 +176,10 @@
                 card.innerHTML = `
                     <span class="tag tag-${item.cat}">${item.cat}</span>
                     <div style="font-weight:900;">${item.name}</div>
-                    <div class="editable-desc" contenteditable="true" 
+                    <div class="desc" contenteditable="true" 
                          onblur="updateDesc(${item.id}, this.innerText)"
-                         onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">
-                        ${item.desc || '특징을 입력하세요'}
+                         onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }">
+                        ${item.desc || ""}
                     </div>
                     <div class="card-ctrl">
                         <a href="javascript:void(0)" onclick="goMap('${item.name}')" class="btn-map-link">📍 지도</a>
@@ -168,7 +201,7 @@
         function updateDashboard() {
             const sum = document.getElementById('home-summary');
             const planned = tripData.filter(t => t.status !== 'wait').slice(0, 5);
-            sum.innerHTML = planned.length ? planned.map(t => `<div style="font-size:0.9rem; margin-bottom:8px; padding-left:10px; border-left:3px solid var(--primary-pink);">📌 [${t.status.toUpperCase()}] ${t.name}</div>`).join('') : '<div style="color:#888; text-align:center; padding:10px;">일정을 배치해보세요!</div>';
+            sum.innerHTML = planned.length ? planned.map(t => `<div style="font-size:0.9rem; margin-bottom:8px; padding-left:10px; border-left:3px solid var(--primary-pink);">📌 [${t.status.toUpperCase()}] ${t.name}</div>`).join('') : '<div style="color:#888; text-align:center;">일정을 배치해보세요!</div>';
         }
 
         // 실시간 업데이트 구독
