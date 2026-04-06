@@ -26,6 +26,7 @@
         h1 { font-weight: 900; text-align: center; color: white; font-size: 1.8rem; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); margin: 20px 0; }
         .card { background: var(--glass); padding: 20px; border-radius: 15px; margin-bottom: 20px; backdrop-filter: blur(10px); }
         
+        /* 칸반보드 및 개별 스크롤 */
         .kanban-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; -webkit-overflow-scrolling: touch; height: calc(100vh - 220px); align-items: flex-start; }
         .kanban-column { min-width: 280px; max-height: 100%; background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; }
         .col-header { color: white; font-weight: bold; margin-bottom: 12px; font-size: 0.95rem; text-shadow: 1px 1px 2px black; flex-shrink: 0; }
@@ -42,6 +43,7 @@
         .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; margin-bottom: 6px; display: inline-block; }
         .tag-음식점 { background: var(--food-red); } .tag-카페 { background: var(--cafe-yellow); color: #333; } .tag-명소 { background: var(--spot-blue); } .tag-쇼핑 { background: var(--shop-purple); }
         
+        /* desc 편집 가능 스타일 */
         .desc { 
             font-size: 0.8rem; color: #666; margin-top: 6px; line-height: 1.4; 
             padding: 4px; border-radius: 4px; border: 1px dashed transparent; transition: 0.2s;
@@ -54,6 +56,12 @@
         .move-sel { font-size: 0.75rem; padding: 5px; border-radius: 6px; flex: 1; border: 1px solid #ddd; }
         .btn-map-link { font-size: 0.75rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 4px 8px; border-radius: 6px; }
 
+        .check-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .check-content { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; }
+        .check-content input { width: 22px; height: 22px; accent-color: var(--kitty-red); }
+        .del-check { color: #ccc; border: none; background: none; font-size: 1.3rem; cursor: pointer; }
+        .checked-text span { text-decoration: line-through; color: #aaa; }
+        
         .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
         .overlay.active { display: block; }
@@ -74,12 +82,19 @@
 
     <div id="home" class="section active">
         <h1>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</h1>
-        <div class="card"><span class="summary-title">⛅ 실시간 날씨</span><a href="https://www.weather.gov.hk/tc/index.html" target="_blank" class="main-btn">홍콩 기상청 열기</a></div>
-        <div class="card"><span class="summary-title">📝 일정 요약</span><div id="home-summary"></div></div>
+        <div class="card"><span class="summary-title">⛅ 실시간 날씨</span><a href="https://m.weather.naver.com/talk/hongkong/11250000" target="_blank" class="main-btn" style="background:#03C75A;">네이버 날씨 실시간톡</a></div>
+        <div class="card">📝 일정 요약<div id="home-summary" style="margin-top:10px;"></div></div>
     </div>
 
     <div id="kanban" class="section">
         <h1>📅 일정 플래너</h1>
+        <div class="card">
+            <span class="summary-title">➕ 새 장소 추가</span>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="newPlaceName" placeholder="장소 이름 입력" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd; outline:none;">
+                <button onclick="addPlace()" class="main-btn" style="width: 80px; margin:0;">추가</button>
+            </div>
+        </div>
         <div class="kanban-container">
             <div class="kanban-column"><div class="col-header">Waitlist</div><div id="col-wait" class="kanban-list"></div></div>
             <div class="kanban-column"><div class="col-header">Day 1</div><div id="col-day1" class="kanban-list"></div></div>
@@ -89,51 +104,26 @@
         </div>
     </div>
 
-    <div id="map" class="section"><h1>📍 홍콩 지도</h1><div class="card"><div class="map-wrapper"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m14.16!22.28!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3403ff8080f5c0c9%3A0x280e224e7587126!2z66as7KCV!5e0!3m2!1sko!2skr!4v1711234567890"></iframe></div></div></div>
-    <div id="check" class="section"><h1>🎒 체크리스트</h1><div class="card"><div id="checkListContainer"></div></div></div>
+    <div id="map" class="section"><h1>📍 홍콩 지도</h1><div class="card"><div class="map-wrapper"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m12!114.161!22.285!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3403ff80eb318f45%3A0x98214b71cc50188!2sHong%20Kong!5e0!3m2!1sen!2skr!4v1712345678901!5m2!1sen!2skr" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy"></iframe></div></div></div>
+
+    <div id="check" class="section">
+        <h1>🎒 재웅 ! 꼭 챙겨 !</h1>
+        <div class="card">
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="text" id="newItem" placeholder="준비물 입력" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd; outline:none;">
+                <button onclick="addItem()" class="main-btn" style="width: auto; padding: 10px 20px; margin:0;">추가</button>
+            </div>
+            <div id="checkListContainer"></div>
+        </div>
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://sirhztixtrpafzwwbbqn.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpcmh6dGl4dHJwYWZ6d3diYnFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTQxOTAsImV4cCI6MjA5MTAzMDE5MH0._akRINb0wdm94yhWhsfDhnVfAD80WD4Eo-hmbEuB_5M';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const TABLE_NAME = 'hongkong2026'; // 테이블명 수정
+        const TABLE_NAME = 'hongkong2026';
 
         let tripData = [];
-
-        const initialData = [
-            { name: "란퐁유엔 소호점", cat: "음식점", desc: "📍 셩완 | 스타킹 밀크티의 원조", status: "wait" },
-            { name: "Wah Lok Cafe", cat: "카페", desc: "📍 셩완 | 로컬 느낌 가득한 카페", status: "wait" },
-            { name: "하프웨이 커피", cat: "카페", desc: "📍 셩완 | 빈티지 컵 맛집", status: "wait" },
-            { name: "상기콘지", cat: "음식점", desc: "📍 셩완 | 홍콩식 아침 죽 맛집", status: "wait" },
-            { name: "Fiata Pizza", cat: "음식점", desc: "📍 셩완 | 정통 나폴리 피자", status: "wait" },
-            { name: "E N", cat: "음식점", desc: "📍 셩완 | 현지 맛집", status: "wait" },
-            { name: "베이크하우스", cat: "카페", desc: "📍 셩완 | 에그타르트 성지", status: "wait" },
-            { name: "Mason Pocket", cat: "음식점", desc: "📍 셩완 | 아기자기한 식당", status: "wait" },
-            { name: "침차이키", cat: "음식점", desc: "📍 셩완 | 미슐랭 완탕면", status: "wait" },
-            { name: "원 딤섬", cat: "음식점", desc: "📍 몽콕 | 가성비 딤섬 최고", status: "wait" },
-            { name: "Oi Man Sang", cat: "음식점", desc: "📍 삼수이포 | 노천 다이파이동", status: "wait" },
-            { name: "Blue Bottle Coffee", cat: "카페", desc: "📍 셩완 | 통창 뷰 블루보틀", status: "wait" },
-            { name: "미드레벨 에스컬레이터", cat: "명소", desc: "📍 센트럴 | 중경상림 촬영지", status: "wait" },
-            { name: "익청빌딩", cat: "명소", desc: "📍 홍콩 섬 | 트랜스포머 촬영지", status: "wait" },
-            { name: "피크트램", cat: "명소", desc: "📍 센트럴 | 빅토리아 피크 야경", status: "wait" },
-            { name: "하버시티", cat: "쇼핑", desc: "📍 침사추이 | 초대형 쇼핑몰", status: "wait" },
-            { name: "Kennedy Town", cat: "명소", desc: "📍 케네디타운 | 일몰 명소", status: "wait" },
-            { name: "카우키", cat: "음식점", desc: "📍 셩완 | 소고기 국수 성지", status: "wait" },
-            { name: "Kowloon Taproom", cat: "음식점", desc: "📍 침사추이 | 수제 맥주 펍", status: "wait" },
-            { name: "스타페리", cat: "명소", desc: "📍 침사추이 | 홍콩 필수 유람선", status: "wait" },
-            { name: "제니쿠키", cat: "쇼핑", desc: "📍 침사추이 | 마약쿠키 기념품", status: "wait" },
-            { name: "란콰이퐁", cat: "명소", desc: "📍 센트럴 | 밤문화 거리", status: "wait" },
-            { name: "타이퀀", cat: "명소", desc: "📍 센트럴 | 복합문화공간", status: "wait" },
-            { name: "PMQ", cat: "명소", desc: "📍 센트럴 | 예술 소품샵", status: "wait" },
-            { name: "웡치케이", cat: "음식점", desc: "📍 센트럴 | 완탕면 맛집", status: "wait" },
-            { name: "레이가든", cat: "음식점", desc: "📍 침사추이 | 미슐랭 딤섬", status: "wait" },
-            { name: "너츠포드 테라스", cat: "명소", desc: "📍 침사추이 | 홍콩의 이태원", status: "wait" },
-            { name: "초이홍 아파트", cat: "명소", desc: "📍 구룡 | 인생샷 성지", status: "wait" },
-            { name: "M+ 뮤지엄", cat: "명소", desc: "📍 구룡 | 현대 미술관", status: "wait" },
-            { name: "서구룡 문화지구", cat: "명소", desc: "📍 구룡 | 바다 산책로", status: "wait" },
-            { name: "싱흥유엔", cat: "음식점", desc: "📍 셩완 | 토마토 라면", status: "wait" },
-            { name: "제니베이커리 셩완", cat: "쇼핑", desc: "📍 셩완 | 쿠키 쇼핑", status: "wait" }
-        ];
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.overlay').classList.toggle('active'); }
         function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar(); updateDashboard(); }
@@ -141,15 +131,14 @@
 
         async function loadData() {
             const { data, error } = await sb.from(TABLE_NAME).select('*').order('created_at', { ascending: true });
-            
-            if (data && data.length === 0) {
-                console.log("초기 데이터 삽입 시도...");
-                const { error: insErr } = await sb.from(TABLE_NAME).insert(initialData);
-                if (!insErr) loadData();
-            } else if (data) {
-                tripData = data;
-                renderKanban();
-            }
+            if (data) { tripData = data; renderKanban(); }
+        }
+
+        async function addPlace() {
+            const name = document.getElementById('newPlaceName').value;
+            if (!name) return alert("장소명을 입력하세요!");
+            await sb.from(TABLE_NAME).insert([{ name: name, cat: "명소", desc: "여기를 클릭해서 설명을 입력하세요", status: "wait" }]);
+            document.getElementById('newPlaceName').value = "";
         }
 
         async function moveCard(id, status) {
@@ -157,7 +146,7 @@
         }
 
         async function updateDesc(id, newDesc) {
-            await sb.from(TABLE_NAME).update({ desc: newDesc.trim() }).eq('id', id);
+            await sb.from(TABLE_NAME).update({ "desc": newDesc.trim() }).eq('id', id);
         }
 
         function renderKanban() {
@@ -170,9 +159,7 @@
                 card.innerHTML = `
                     <span class="tag tag-${item.cat}">${item.cat}</span>
                     <div style="font-weight:900;">${item.name}</div>
-                    <div class="desc" contenteditable="true" 
-                         onblur="updateDesc(${item.id}, this.innerText)"
-                         onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }">
+                    <div class="desc" contenteditable="true" onblur="updateDesc(${item.id}, this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">
                         ${item.desc || ""}
                     </div>
                     <div class="card-ctrl">
@@ -194,14 +181,31 @@
 
         function updateDashboard() {
             const sum = document.getElementById('home-summary');
-            const planned = tripData.filter(t => t.status !== 'wait').slice(0, 5);
+            const planned = tripData.filter(t => t.status !== 'wait');
             sum.innerHTML = planned.length ? planned.map(t => `<div style="font-size:0.9rem; margin-bottom:8px; padding-left:10px; border-left:3px solid var(--primary-pink);">📌 [${t.status.toUpperCase()}] ${t.name}</div>`).join('') : '<div style="color:#888; text-align:center;">일정을 배치해보세요!</div>';
         }
 
-        // 실시간 업데이트 구독 (테이블명 반영)
-        sb.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, loadData).subscribe();
+        let checks = JSON.parse(localStorage.getItem('hk_check_items')) || [{text:"여권", done:false}];
+        function renderC() {
+            const container = document.getElementById('checkListContainer');
+            if(!container) return;
+            container.innerHTML = checks.map((item, i) => `
+                <div class="check-item">
+                    <div class="check-content ${item.done ? 'checked-text' : ''}" onclick="toggleCheck(${i})">
+                        <input type="checkbox" ${item.done ? 'checked' : ''}>
+                        <span>${item.text}</span>
+                    </div>
+                    <button class="del-check" onclick="delCheck(${i})">✕</button>
+                </div>
+            `).join('');
+            localStorage.setItem('hk_check_items', JSON.stringify(checks));
+        }
+        function toggleCheck(i) { checks[i].done = !checks[i].done; renderC(); }
+        function delCheck(i) { checks.splice(i, 1); renderC(); }
+        function addItem() { const val = document.getElementById('newItem').value; if(val) { checks.push({text:val, done:false}); renderC(); document.getElementById('newItem').value=''; } }
 
-        window.onload = () => { loadData(); };
+        sb.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, loadData).subscribe();
+        window.onload = () => { loadData(); renderC(); };
     </script>
 </body>
 </html>
