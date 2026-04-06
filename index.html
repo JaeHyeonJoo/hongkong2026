@@ -3,104 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🄷🄾🄽🄶 🄺🄾🄽🄶</title>
+    <title>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary-pink: #ffafcc; 
-            --kitty-red: #ff4d6d;
-            --glass: rgba(255, 255, 255, 0.9);
-            --food-red: #ff6b6b;
-            --cafe-yellow: #ffd166;
-            --spot-blue: #118ab2;
+            --primary-pink: #ffafcc; --kitty-red: #ff4d6d; --glass: rgba(255, 255, 255, 0.92);
+            --food-red: #ff6b6b; --cafe-yellow: #ffd166; --spot-blue: #118ab2; --shop-purple: #a29bfe;
         }
-
         body { 
-            font-family: 'Noto Sans KR', sans-serif; 
-            margin: 0; padding: 0;
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
-                        url('Chungking Express.jpg') no-repeat center center fixed; 
-            background-size: cover; min-height: 100vh; color: #333;
+            font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Chungking Express.jpg') no-repeat center center fixed; 
+            background-size: cover; min-height: 100vh; color: #333; overflow-x: hidden;
         }
-
-        /* ☰ 메뉴 및 사이드바 */
+        /* 사이드바 및 레이아웃 생략 (기존과 동일) */
         .menu-btn { position: fixed; top: 15px; left: 15px; z-index: 1000; font-size: 1.8rem; color: white; cursor: pointer; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        .sidebar { 
-            position: fixed; top: 0; left: -280px; width: 250px; height: 100%; 
-            background: #fff0f3; z-index: 1001; transition: 0.3s; padding: 60px 20px; 
-            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
-        }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background: #fff0f3; z-index: 1001; transition: 0.3s; padding: 60px 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
         .sidebar.active { left: 0; }
         .nav-item { padding: 15px; margin-bottom: 10px; background: white; border-radius: 10px; cursor: pointer; font-weight: 900; color: var(--kitty-red); text-align: center; border: 1px solid var(--primary-pink); }
-
-        /* 섹션 제어 */
         .section { display: none; padding: 60px 15px 20px 15px; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         h1 { font-weight: 900; text-align: center; color: white; font-size: 1.8rem; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); margin: 20px 0; }
         .card { background: var(--glass); padding: 20px; border-radius: 15px; margin-bottom: 20px; backdrop-filter: blur(10px); }
-
-        /* 📍 지도 영역 */
-        .map-wrapper { 
-            width: 100%; 
-            height: 300px; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            border: 2px solid white; 
-            background: #eee;
-            display: flex;
-            justify-content: center;
-        }
-        .map-wrapper iframe { width: 100% !important; height: 100% !important; border: none; }
-
-        .summary-title { font-weight: 700; font-size: 1.05rem; color: var(--kitty-red); margin-bottom: 10px; display: block; }
-        .summary-item { font-size: 0.9rem; margin-bottom: 8px; color: #555; padding-left: 10px; border-left: 3px solid var(--primary-pink); cursor: pointer; }
-
-        /* 🔥 칸반보드 스타일 */
-        .kanban-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
-        .kanban-column { min-width: 260px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.3); }
-        .col-header { color: white; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; display: flex; justify-content: space-between; text-shadow: 1px 1px 2px black; }
-        .kanban-card { background: white; border-radius: 8px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .tag { font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; color: white; font-weight: bold; }
-        .tag-음식점 { background: var(--food-red); } .tag-카페 { background: var(--cafe-yellow); color: #333; } .tag-명소 { background: var(--spot-blue); }
         
-        .card-ctrl { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 5px; }
-        .move-sel { font-size: 0.7rem; padding: 2px; border-radius: 4px; flex: 1; }
-        .btn-map-link { font-size: 0.7rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 2px 5px; border-radius: 4px; }
+        .kanban-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; -webkit-overflow-scrolling: touch; height: calc(100vh - 220px); align-items: flex-start; }
+        .kanban-column { min-width: 280px; max-height: 100%; background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; }
+        .col-header { color: white; font-weight: bold; margin-bottom: 12px; font-size: 0.95rem; text-shadow: 1px 1px 2px black; flex-shrink: 0; }
+        .kanban-list { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
 
-        /* ✅ 체크리스트 정렬 수정 완료 */
-        #checkListContainer { width: 100%; margin-top: 15px; }
-        .check-item { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            width: 100%; 
-            margin-bottom: 12px; 
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+        .kanban-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); border-left: 5px solid transparent; }
+        .kanban-card.type-음식점 { border-left-color: var(--food-red); }
+        .kanban-card.type-카페 { border-left-color: var(--cafe-yellow); }
+        .kanban-card.type-명소 { border-left-color: var(--spot-blue); }
+        .kanban-card.type-쇼핑 { border-left-color: var(--shop-purple); }
+
+        .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; margin-bottom: 6px; display: inline-block; }
+        .tag-음식점 { background: var(--food-red); } .tag-카페 { background: var(--cafe-yellow); color: #333; } .tag-명소 { background: var(--spot-blue); } .tag-쇼핑 { background: var(--shop-purple); }
+        
+        /* 💡 desc 편집 가능 스타일 */
+        .editable-desc { 
+            font-size: 0.85rem; color: #444; margin-top: 8px; line-height: 1.4; 
+            padding: 4px; border-radius: 4px; border: 1px dashed transparent; transition: 0.2s;
+            cursor: text; min-height: 1.2em;
         }
-        .check-content { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            cursor: pointer; 
-            flex: 1; 
-        }
-        .check-content input { 
-            width: 22px; height: 22px; accent-color: var(--kitty-red); flex-shrink: 0; margin: 0;
-        }
-        .check-content span { font-size: 1rem; color: #333; word-break: break-all; }
+        .editable-desc:hover { border-color: var(--primary-pink); background: #fff9fb; }
+        .editable-desc:focus { border-style: solid; border-color: var(--kitty-red); background: #fff; outline: none; }
+
+        .card-ctrl { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .move-sel { font-size: 0.75rem; padding: 5px; border-radius: 6px; flex: 1; border: 1px solid #ddd; }
+        .btn-map-link { font-size: 0.75rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 4px 8px; border-radius: 6px; }
+
+        .check-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .check-content { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; }
+        .check-content input { width: 22px; height: 22px; accent-color: var(--kitty-red); }
+        .del-check { color: #ccc; border: none; background: none; font-size: 1.3rem; cursor: pointer; }
         .checked-text span { text-decoration: line-through; color: #aaa; }
-        .del-check { color: #ccc; border: none; background: none; font-size: 1.2rem; padding: 0 5px; cursor: pointer; flex-shrink: 0; }
-
-        /* 버튼 및 기타 */
-        .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; }
-        .btn-weather { display: block; text-align: center; background: #007bff; color: white; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 700; margin-bottom: 10px; font-size: 0.9rem; }
-        .btn-talk { font-weight: 700; display: block; text-align: center; background: #2db400; color: white; padding: 15px; border-radius: 10px; text-decoration: none; margin-top: 20px; }
+        .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; }
+        .map-wrapper { width: 100%; height: 300px; border-radius: 15px; overflow: hidden; border: 2px solid white; background: #eee; }
+        .map-wrapper iframe { width: 100%; height: 100%; border: none; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
         .overlay.active { display: block; }
-        input[type="text"] { padding: 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; width: 100%; box-sizing: border-box; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -114,102 +77,77 @@
         <div class="nav-item" onclick="showSection('kanban')">📋 일정 보드</div>
         <div class="nav-item" onclick="showSection('map')">📍 홍콩 지도</div>
         <div class="nav-item" onclick="showSection('check')">🎒 체크리스트</div>
-        <hr style="border:0; border-top:1px solid #ffafcc; margin: 20px 0;">
-        <p style="font-size:0.7rem; color:#999; text-align:center;">Chungking Express Edition</p>
     </div>
 
     <div id="home" class="section active">
-        <h1>🄷🄾🄽🄶  🄺🄾🄽🄶</h1>
-        <div class="card">
-            <span class="summary-title">⛅ 홍콩 기상청 날씨</span>
-            <a href="https://www.weather.gov.hk/tc/index.html" target="_blank" class="btn-weather">실시간 날씨 확인 (HKO)</a>
-        </div>
-        <div class="card" onclick="showSection('map')">
-            <span class="summary-title">📍 현재 지도 루트</span>
-            <div class="map-wrapper">
-                <iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F" width="640" height="480"></iframe>
-            </div>
-        </div>
-        <div class="card" onclick="showSection('kanban')">
-            <span class="summary-title">📝 일정 요약 (Day 1)</span>
-            <div id="home-kanban-summary"></div>
-        </div>
-        <a href="https://ntalk.naver.com/ch/N125lX" target="_blank" class="btn-talk">실시간 홍콩 여행톡</a>
+        <h1>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</h1>
+        <div class="card"><span class="summary-title">⛅ 실시간 날씨</span><a href="https://www.weather.gov.hk/tc/index.html" target="_blank" class="main-btn">홍콩 기상청 열기</a></div>
+        <div class="card" onclick="showSection('map')"><div class="map-wrapper"><iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F"></iframe></div></div>
+        <div class="card"><span class="summary-title">📝 일정 요약</span><div id="home-summary"></div></div>
     </div>
 
     <div id="kanban" class="section">
         <h1>📅 일정 플래너</h1>
-        <div class="card">
-            <span class="summary-title">➕ 새 장소 추가 & 지도 이동</span>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="newPlaceName" placeholder="장소 이름을 입력하세요">
-                <button onclick="addPlaceAndGo()" class="main-btn" style="width: 80px;">추가</button>
-            </div>
-        </div>
         <div class="kanban-container">
-            <div class="kanban-column"><div class="col-header">Waitlist</div><div id="col-wait"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 1</div><div id="col-day1"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 2</div><div id="col-day2"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 3</div><div id="col-day3"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 4</div><div id="col-day4"></div></div>
+            <div class="kanban-column"><div class="col-header">Waitlist</div><div id="col-wait" class="kanban-list"></div></div>
+            <div class="kanban-column"><div class="col-header">Day 1</div><div id="col-day1" class="kanban-list"></div></div>
+            <div class="kanban-column"><div class="col-header">Day 2</div><div id="col-day2" class="kanban-list"></div></div>
+            <div class="kanban-column"><div class="col-header">Day 3</div><div id="col-day3" class="kanban-list"></div></div>
+            <div class="kanban-column"><div class="col-header">Day 4</div><div id="col-day4" class="kanban-list"></div></div>
         </div>
     </div>
 
-    <div id="map" class="section">
-        <h1>📍 홍콩 지도</h1>
-        <div class="card">
-            <div class="map-wrapper"><iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F" width="640" height="480"></iframe></div>
-        </div>
-    </div>
-
-    <div id="check" class="section">
-        <h1>🎒 재웅 ! 꼭 챙겨 ! </h1>
-        <div class="card">
-            <div class="input-group" style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="text" id="newItem" placeholder="준비물 입력" style="flex:1;">
-                <button onclick="addItem()" class="main-btn" style="width: auto;">추가</button>
-            </div>
-            <div id="checkListContainer"></div>
-        </div>
-    </div>
+    <div id="map" class="section"><h1>📍 홍콩 지도</h1><div class="card"><div class="map-wrapper"><iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F"></iframe></div></div></div>
+    <div id="check" class="section"><h1>🎒 체크리스트</h1><div class="card"><div id="checkListContainer"></div></div></div>
 
     <script>
+        const SUPABASE_URL = 'https://sirhztixtrpafzwwbbqn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpcmh6dGl4dHJwYWZ6d3diYnFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTQxOTAsImV4cCI6MjA5MTAzMDE5MH0._akRINb0wdm94yhWhsfDhnVfAD80WD4Eo-hmbEuB_5M';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let tripData = [];
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.overlay').classList.toggle('active'); }
         function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar(); updateDashboard(); }
-
-        const initialData = [
-            {id:1, name: "란퐁유엔 소호점", cat: "음식점", status: "wait"},
-            {id:2, name: "베이크하우스", cat: "카페", status: "wait"},
-            {id:3, name: "미드레벨 에스컬레이터", cat: "명소", status: "wait"},
-            {id:4, name: "침차이키", cat: "음식점", status: "wait"},
-            {id:5, name: "카우키", cat: "음식점", status: "wait"},
-            {id:6, name: "익청빌딩", cat: "명소", status: "wait"},
-            {id:7, name: "Kennedy Town", cat: "명소", status: "wait"}
-        ];
-
-        let tripData = JSON.parse(localStorage.getItem('hk_kanban')) || initialData;
-        let checks = JSON.parse(localStorage.getItem('hk_check_items')) || [{text:"여권", done:false}];
-
         function goMap(name) { window.open(`https://www.google.com/maps/search/${encodeURIComponent(name + " Hong Kong")}`, '_blank'); }
 
-        function addPlaceAndGo() {
-            const name = document.getElementById('newPlaceName').value;
-            if(!name) return alert("장소 이름을 입력하세요!");
-            const newItem = {id: Date.now(), name: name, cat: "명소", status: "wait"};
-            tripData.push(newItem);
-            renderKanban();
-            document.getElementById('newPlaceName').value = "";
-            goMap(name);
+        async function loadData() {
+            const { data, error } = await sb.from('trips').select('*').order('created_at', { ascending: true });
+            if (data) { tripData = data; renderKanban(); }
+        }
+
+        async function moveCard(id, status) {
+            await sb.from('trips').update({ status }).eq('id', id);
+        }
+
+        // 📝 특징(desc) 수정 함수
+        async function updateDesc(id, newDesc) {
+            const originalData = tripData.find(t => t.id === id);
+            // 내용이 이전과 같으면 업데이트하지 않음
+            if (originalData.desc === newDesc.trim()) return;
+
+            const { error } = await sb.from('trips').update({ desc: newDesc.trim() }).eq('id', id);
+            if (error) {
+                alert("수정에 실패했습니다. 다시 시도해주세요.");
+                loadData(); // 실패 시 원래 데이터로 복구
+            }
         }
 
         function renderKanban() {
             const cols = ['wait', 'day1', 'day2', 'day3', 'day4'];
             cols.forEach(s => document.getElementById('col-'+s).innerHTML = '');
+
             tripData.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'kanban-card';
+                card.className = `kanban-card type-${item.cat}`;
                 card.innerHTML = `
-                    <span class="tag tag-${item.cat}">${item.cat}</span><br><strong>${item.name}</strong>
+                    <span class="tag tag-${item.cat}">${item.cat}</span>
+                    <div style="font-weight:900;">${item.name}</div>
+                    <div class="editable-desc" contenteditable="true" 
+                         onblur="updateDesc(${item.id}, this.innerText)"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">
+                        ${item.desc || '특징을 입력하세요'}
+                    </div>
                     <div class="card-ctrl">
                         <a href="javascript:void(0)" onclick="goMap('${item.name}')" class="btn-map-link">📍 지도</a>
                         <select class="move-sel" onchange="moveCard(${item.id}, this.value)">
@@ -219,41 +157,24 @@
                             <option value="day3" ${item.status==='day3'?'selected':''}>Day 3</option>
                             <option value="day4" ${item.status==='day4'?'selected':''}>Day 4</option>
                         </select>
-                        <button onclick="delCard(${item.id})" style="border:none; background:none; color:red; font-size:0.7rem;">✕</button>
+                        <button onclick="moveCard(${item.id}, 'wait')" style="border:none; background:none; color:#ddd; font-size:1.1rem; cursor:pointer;">✕</button>
                     </div>
                 `;
                 document.getElementById('col-'+item.status).appendChild(card);
             });
-            localStorage.setItem('hk_kanban', JSON.stringify(tripData));
+            updateDashboard();
         }
-
-        function moveCard(id, status) { const idx = tripData.findIndex(t => t.id === id); tripData[idx].status = status; renderKanban(); }
-        function delCard(id) { if(confirm('삭제할까요?')) { tripData = tripData.filter(t => t.id !== id); renderKanban(); } }
 
         function updateDashboard() {
-            const sum = document.getElementById('home-kanban-summary');
-            const day1 = tripData.filter(t => t.status === 'day1').slice(0, 3);
-            sum.innerHTML = day1.length ? day1.map(t => `<div class="summary-item" onclick="goMap('${t.name}')">${t.name}</div>`).join('') : '<div class="summary-item">일정을 보드에서 Day 1로 옮겨보세요!</div>';
+            const sum = document.getElementById('home-summary');
+            const planned = tripData.filter(t => t.status !== 'wait').slice(0, 5);
+            sum.innerHTML = planned.length ? planned.map(t => `<div style="font-size:0.9rem; margin-bottom:8px; padding-left:10px; border-left:3px solid var(--primary-pink);">📌 [${t.status.toUpperCase()}] ${t.name}</div>`).join('') : '<div style="color:#888; text-align:center; padding:10px;">일정을 배치해보세요!</div>';
         }
 
-        function renderC() {
-            const container = document.getElementById('checkListContainer');
-            container.innerHTML = checks.map((item, i) => `
-                <div class="check-item">
-                    <div class="check-content ${item.done ? 'checked-text' : ''}" onclick="toggleCheck(${i})">
-                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="event.stopPropagation(); toggleCheck(${i});">
-                        <span>${item.text}</span>
-                    </div>
-                    <button class="del-check" onclick="delCheck(${i})">✕</button>
-                </div>
-            `).join('');
-            localStorage.setItem('hk_check_items', JSON.stringify(checks));
-        }
-        function toggleCheck(i) { checks[i].done = !checks[i].done; renderC(); }
-        function delCheck(i) { checks.splice(i, 1); renderC(); }
-        function addItem() { const val = document.getElementById('newItem').value; if(val) { checks.push({text:val, done:false}); renderC(); document.getElementById('newItem').value=''; } }
+        // 실시간 업데이트 구독
+        sb.channel('public:trips').on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, loadData).subscribe();
 
-        renderKanban(); renderC(); updateDashboard();
+        window.onload = () => { loadData(); };
     </script>
 </body>
 </html>
