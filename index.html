@@ -4,114 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
-            --primary-pink: #ffafcc; --kitty-red: #ff4d6d; --glass: rgba(255, 255, 255, 0.92);
-            --food-red: #ff6b6b; --cafe-yellow: #ffd166; --spot-blue: #118ab2; --shop-purple: #a29bfe;
+            --primary-pink: #ffafcc; 
+            --kitty-red: #ff4d6d;
+            --glass: rgba(255, 255, 255, 0.9);
+            --food-red: #ff6b6b;
+            --cafe-yellow: #ffd166;
+            --spot-blue: #118ab2;
+            /* 쇼핑 및 기타 색상 변수 추가 */
+            --shop-purple: #a29bfe;
+            --etc-gray: #95a5a6;
         }
+
         body { 
-            font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('Chungking Express.jpg') no-repeat center center fixed; 
-            background-size: cover; min-height: 100vh; color: #333; overflow-x: hidden;
+            font-family: 'Noto Sans KR', sans-serif; 
+            margin: 0; padding: 0;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+                        url('Chungking Express.jpg') no-repeat center center fixed; 
+            background-size: cover; min-height: 100vh; color: #333;
         }
+
         .menu-btn { position: fixed; top: 15px; left: 15px; z-index: 1000; font-size: 1.8rem; color: white; cursor: pointer; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 250px; height: 100%; background: #fff0f3; z-index: 1001; transition: 0.3s; padding: 60px 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
+        .sidebar { 
+            position: fixed; top: 0; left: -280px; width: 250px; height: 100%; 
+            background: #fff0f3; z-index: 1001; transition: 0.3s; padding: 60px 20px; 
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        }
         .sidebar.active { left: 0; }
         .nav-item { padding: 15px; margin-bottom: 10px; background: white; border-radius: 10px; cursor: pointer; font-weight: 900; color: var(--kitty-red); text-align: center; border: 1px solid var(--primary-pink); }
+
         .section { display: none; padding: 60px 15px 20px 15px; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         h1 { font-weight: 900; text-align: center; color: white; font-size: 1.8rem; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); margin: 20px 0; }
         .card { background: var(--glass); padding: 20px; border-radius: 15px; margin-bottom: 20px; backdrop-filter: blur(10px); }
-        
-        /* 칸반보드 및 개별 스크롤 */
-        .kanban-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; -webkit-overflow-scrolling: touch; height: calc(100vh - 220px); align-items: flex-start; }
-        .kanban-column { min-width: 280px; max-height: 100%; background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; }
-        .col-header { color: white; font-weight: bold; margin-bottom: 12px; font-size: 0.95rem; text-shadow: 1px 1px 2px black; flex-shrink: 0; }
-        .kanban-list { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
-        .kanban-list::-webkit-scrollbar { width: 4px; }
-        .kanban-list::-webkit-scrollbar-thumb { background: var(--primary-pink); border-radius: 10px; }
 
-        .kanban-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); border-left: 5px solid transparent; }
-        .kanban-card.type-음식점 { border-left-color: var(--food-red); }
-        .kanban-card.type-카페 { border-left-color: var(--cafe-yellow); }
-        .kanban-card.type-명소 { border-left-color: var(--spot-blue); }
-        .kanban-card.type-쇼핑 { border-left-color: var(--shop-purple); }
+        .map-wrapper { width: 100%; height: 350px; border-radius: 12px; overflow: hidden; border: 2px solid white; background: #eee; }
+        .map-wrapper iframe { width: 100% !important; height: 100% !important; border: none; }
 
-        .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; margin-bottom: 6px; display: inline-block; }
-        .tag-음식점 { background: var(--food-red); } .tag-카페 { background: var(--cafe-yellow); color: #333; } .tag-명소 { background: var(--spot-blue); } .tag-쇼핑 { background: var(--shop-purple); }
-        
-        /* desc 편집 가능 스타일 */
-        .desc { 
-            font-size: 0.8rem; color: #666; margin-top: 6px; line-height: 1.4; 
-            padding: 4px; border-radius: 4px; border: 1px dashed transparent; transition: 0.2s;
-            cursor: text; min-height: 1.2em;
-        }
-        .desc:hover { border-color: var(--primary-pink); background: #fff9fb; }
-        .desc:focus { border-style: solid; border-color: var(--kitty-red); background: white; outline: none; }
-        
-        .card-ctrl { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .move-sel { font-size: 0.75rem; padding: 5px; border-radius: 6px; flex: 1; border: 1px solid #ddd; }
-        .btn-map-link { font-size: 0.75rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 4px 8px; border-radius: 6px; }
+        .summary-title { font-weight: 900; font-size: 1.1rem; color: var(--kitty-red); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .summary-item { font-size: 0.95rem; margin-bottom: 10px; color: #333; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px; border-left: 5px solid var(--primary-pink); cursor: pointer; font-weight: 700; }
 
-        .check-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        /* 칸반 */
+        .kanban-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .kanban-column { min-width: 260px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.3); }
+        .col-header { color: white; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; display: flex; justify-content: space-between; text-shadow: 1px 1px 2px black; }
+        .kanban-card { background: white; border-radius: 8px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #ccc; } /* 기본 보더 추가 */
+        .tag { font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; color: white; font-weight: bold; }
+        
+        /* 태그 색상 정의 */
+        .tag-음식점 { background: var(--food-red); } 
+        .tag-카페 { background: var(--cafe-yellow); color: #333; } 
+        .tag-명소 { background: var(--spot-blue); }
+        .tag-쇼핑 { background: var(--shop-purple); } /* 쇼핑 태그색 */
+        .tag-기타 { background: var(--etc-gray); }   /* 기타 태그색 */
+        
+        .card-ctrl { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 5px; }
+        .move-sel { font-size: 0.7rem; padding: 2px; border-radius: 4px; flex: 1; }
+        .btn-map-link { font-size: 0.7rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 2px 5px; border-radius: 4px; }
+
+        /* desc 편집 */
+        .card-desc { font-size: 0.75rem; color: #888; margin: 5px 0; min-height: 18px; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
+        .card-desc:hover { background: #f5f5f5; }
+        .card-desc-input { font-size: 0.75rem; width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 3px 5px; box-sizing: border-box; outline: none; font-family: inherit; resize: none; }
+
+        /* 체크리스트 */
+        .check-item { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .check-content { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; }
-        .check-content input { width: 22px; height: 22px; accent-color: var(--kitty-red); }
-        .del-check { color: #ccc; border: none; background: none; font-size: 1.3rem; cursor: pointer; }
+        .check-content input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--kitty-red); }
         .checked-text span { text-decoration: line-through; color: #aaa; }
+        .del-check { color: #ccc; border: none; background: none; font-size: 1.2rem; cursor: pointer; }
+
+        /* 버튼 */
+        .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
+        .btn-weather { background: #1a73e8; margin-top: 10px; }
+        .btn-talk { background: #03c75a; margin-top: 10px; }
         
-        .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
         .overlay.active { display: block; }
+        input[type="text"] { padding: 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; width: 100%; box-sizing: border-box; }
+
+        /* 로딩 / 동기화 상태 */
+        .sync-badge { 
+            position: fixed; bottom: 15px; right: 15px; 
+            background: rgba(0,0,0,0.7); color: white; 
+            font-size: 0.7rem; padding: 6px 12px; border-radius: 20px; 
+            z-index: 999; transition: 0.3s; display: flex; align-items: center; gap: 5px;
+        }
+        .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf50; }
+        .sync-dot.loading { background: #ffd166; animation: blink 1s infinite; }
+        .sync-dot.error { background: #ff4d6d; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* cat 선택 */
+        .cat-sel { font-size: 0.7rem; padding: 2px 4px; border-radius: 4px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
     <div class="menu-btn" onclick="toggleSidebar()">☰</div>
     <div class="overlay" onclick="toggleSidebar()"></div>
+    <div class="sync-badge" id="syncBadge"><div class="sync-dot loading" id="syncDot"></div><span id="syncText">연결 중...</span></div>
 
     <div class="sidebar" id="sidebar">
         <h3 style="text-align:center; color:var(--kitty-red); font-weight:900;">HK 2026 🎬</h3>
         <div class="nav-item" onclick="showSection('home')">🏠 메인 홈</div>
-        <div class="nav-item" onclick="showSection('kanban')">📋 일정 보드 (32곳)</div>
-        <div class="nav-item" onclick="showSection('map')">📍 홍콩 지도</div>
+        <div class="nav-item" onclick="showSection('kanban')">📋 일정 보드</div>
+        <div class="nav-item" onclick="showSection('map')">📍 전체 지도</div>
         <div class="nav-item" onclick="showSection('check')">🎒 체크리스트</div>
+        <hr style="border:0; border-top:1px solid #ffafcc; margin: 20px 0;">
+        <p style="font-size:0.7rem; color:#999; text-align:center;">Chungking Express Edition</p>
     </div>
 
     <div id="home" class="section active">
         <h1>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</h1>
-        <div class="card"><span class="summary-title">⛅ 실시간 날씨</span><a href="https://m.weather.naver.com/talk/hongkong/11250000" target="_blank" class="main-btn" style="background:#03C75A;">네이버 날씨 실시간톡</a></div>
-        <div class="card">📝 일정 요약<div id="home-summary" style="margin-top:10px;"></div></div>
+        <div class="card">
+            <span class="summary-title">⛅ 실시간 날씨 & 기상청</span>
+            <a href="https://www.weather.gov.hk/tc/index.html" target="_blank" class="main-btn btn-weather">홍콩 기상청(HKO) 홈페이지</a>
+            <a href="https://ntalk.naver.com/ch/N125lX" target="_blank" class="main-btn btn-talk">네이버 실시간 홍콩 여행톡</a>
+        </div>
+        <div class="card">
+            <span class="summary-title">📍 나만의 지도 루트</span>
+            <div class="map-wrapper">
+                <iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F" width="640" height="480"></iframe>
+            </div>
+            <button onclick="showSection('map')" class="main-btn" style="margin-top:15px; background: #555;">지도 크게 보기</button>
+        </div>
+        <div class="card">
+            <span class="summary-title">📝 오늘의 일정 요약 (Day 1)</span>
+            <div id="home-kanban-summary"></div>
+            <button onclick="showSection('kanban')" class="main-btn" style="margin-top:15px; background: var(--spot-blue);">전체 일정 관리하러 가기</button>
+        </div>
     </div>
 
     <div id="kanban" class="section">
         <h1>📅 일정 플래너</h1>
         <div class="card">
-            <span class="summary-title">➕ 새 장소 추가</span>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="newPlaceName" placeholder="장소 이름 입력" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd; outline:none;">
-                <button onclick="addPlace()" class="main-btn" style="width: 80px; margin:0;">추가</button>
+            <span class="summary-title">➕ 장소 추가</span>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <input type="text" id="newPlaceName" placeholder="장소 이름" style="flex:2; min-width:120px;">
+                <select id="newPlaceCat" class="cat-sel" style="flex:1; min-width:80px; padding:10px; border-radius:10px; border:1px solid #ddd;">
+                    <option value="명소">명소</option>
+                    <option value="음식점">음식점</option>
+                    <option value="카페">카페</option>
+                    <option value="쇼핑">쇼핑</option> <option value="기타">기타</option> </select>
+                <button onclick="addPlace()" class="main-btn" style="width:70px; padding:12px;">추가</button>
             </div>
         </div>
         <div class="kanban-container">
-            <div class="kanban-column"><div class="col-header">Waitlist</div><div id="col-wait" class="kanban-list"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 1</div><div id="col-day1" class="kanban-list"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 2</div><div id="col-day2" class="kanban-list"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 3</div><div id="col-day3" class="kanban-list"></div></div>
-            <div class="kanban-column"><div class="col-header">Day 4</div><div id="col-day4" class="kanban-list"></div></div>
+            <div class="kanban-column"><div class="col-header">⏳ Waitlist</div><div id="col-wait"></div></div>
+            <div class="kanban-column"><div class="col-header">☀️ Day 1</div><div id="col-day1"></div></div>
+            <div class="kanban-column"><div class="col-header">☀️ Day 2</div><div id="col-day2"></div></div>
+            <div class="kanban-column"><div class="col-header">☀️ Day 3</div><div id="col-day3"></div></div>
+            <div class="kanban-column"><div class="col-header">☀️ Day 4</div><div id="col-day4"></div></div>
         </div>
     </div>
 
-    <div id="map" class="section"><h1>📍 홍콩 지도</h1><div class="card"><div class="map-wrapper"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m12!114.161!22.285!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3403ff80eb318f45%3A0x98214b71cc50188!2sHong%20Kong!5e0!3m2!1sen!2skr!4v1712345678901!5m2!1sen!2skr" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy"></iframe></div></div></div>
+    <div id="map" class="section">
+        <h1>📍 전체 지도</h1>
+        <div class="card">
+            <div class="map-wrapper" style="height: 500px;">
+                <iframe src="https://www.google.com/maps/d/u/2/embed?mid=1ThEJOXrqi6OFQGcy7Z8STR5caHNyrnc&ehbc=2E312F"></iframe>
+            </div>
+        </div>
+    </div>
 
     <div id="check" class="section">
         <h1>🎒 재웅 ! 꼭 챙겨 !</h1>
         <div class="card">
             <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="text" id="newItem" placeholder="준비물 입력" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ddd; outline:none;">
-                <button onclick="addItem()" class="main-btn" style="width: auto; padding: 10px 20px; margin:0;">추가</button>
+                <input type="text" id="newItem" placeholder="준비물 입력">
+                <button onclick="addCheckItem()" class="main-btn" style="width: 80px;">추가</button>
             </div>
             <div id="checkListContainer"></div>
         </div>
@@ -119,93 +186,213 @@
 
     <script>
         const SUPABASE_URL = 'https://sirhztixtrpafzwwbbqn.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpcmh6dGl4dHJwYWZ6d3diYnFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTQxOTAsImV4cCI6MjA5MTAzMDE5MH0._akRINb0wdm94yhWhsfDhnVfAD80WD4Eo-hmbEuB_5M';
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const TABLE_NAME = 'hongkong2026';
+        const SUPABASE_KEY = 'sb_publishable_wy221aQzwwUn8pG2YXN8ww_5-6iF3SM';
+        const { createClient } = supabase;
+        const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let tripData = [];
+        let checkData = [];
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.overlay').classList.toggle('active'); }
-        function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar(); updateDashboard(); }
-        function goMap(name) { window.open(`https://www.google.com/maps/search/${encodeURIComponent(name + " Hong Kong")}`, '_blank'); }
+        function setSyncStatus(state, msg) {
+            const dot = document.getElementById('syncDot');
+            const txt = document.getElementById('syncText');
+            dot.className = 'sync-dot' + (state === 'ok' ? '' : state === 'loading' ? ' loading' : ' error');
+            txt.textContent = msg;
+        }
 
-        async function loadData() {
-            const { data, error } = await sb.from(TABLE_NAME).select('*').order('created_at', { ascending: true });
-            if (data) { tripData = data; renderKanban(); }
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.overlay').classList.toggle('active');
+        }
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
+            updateDashboard();
+        }
+
+        function goMap(name) {
+            window.open(`https://www.google.com/maps/search/${encodeURIComponent(name + " Hong Kong")}`, '_blank');
+        }
+
+        async function loadPlaces() {
+            setSyncStatus('loading', '불러오는 중...');
+            const { data, error } = await sb.from('hongkong2026').select('*').order('created_at');
+            if (error) { setSyncStatus('error', '연결 오류'); return; }
+            tripData = data;
+            renderKanban();
+            setSyncStatus('ok', '실시간 연결됨');
         }
 
         async function addPlace() {
-            const name = document.getElementById('newPlaceName').value;
-            if (!name) return alert("장소명을 입력하세요!");
-            await sb.from(TABLE_NAME).insert([{ name: name, cat: "명소", desc: "여기를 클릭해서 설명을 입력하세요", status: "wait" }]);
-            document.getElementById('newPlaceName').value = "";
+            const name = document.getElementById('newPlaceName').value.trim();
+            const cat = document.getElementById('newPlaceCat').value;
+            if (!name) return alert('장소 이름을 입력하세요!');
+            setSyncStatus('loading', '저장 중...');
+            const { error } = await sb.from('hongkong2026').insert({ name, cat, desc: '', status: 'wait' });
+            if (error) { setSyncStatus('error', '저장 실패'); return; }
+            document.getElementById('newPlaceName').value = '';
+            goMap(name);
         }
 
         async function moveCard(id, status) {
-            await sb.from(TABLE_NAME).update({ status }).eq('id', id);
+            setSyncStatus('loading', '업데이트 중...');
+            await sb.from('hongkong2026').update({ status }).eq('id', id);
         }
 
-        async function updateDesc(id, newDesc) {
-            await sb.from(TABLE_NAME).update({ "desc": newDesc.trim() }).eq('id', id);
+        async function returnToWait(id) {
+            setSyncStatus('loading', '업데이트 중...');
+            await sb.from('hongkong2026').update({ status: 'wait' }).eq('id', id);
+        }
+
+        function startEditDesc(id, currentDesc) {
+            const el = document.getElementById('desc-' + id);
+            const textarea = document.createElement('textarea');
+            textarea.className = 'card-desc-input';
+            textarea.value = currentDesc || '';
+            textarea.rows = 2;
+            textarea.placeholder = '메모를 입력하세요...';
+            textarea.onblur = () => saveDesc(id, textarea.value);
+            textarea.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); textarea.blur(); } };
+            el.replaceWith(textarea);
+            textarea.focus();
+        }
+
+        async function saveDesc(id, desc) {
+            setSyncStatus('loading', '저장 중...');
+            await sb.from('hongkong2026').update({ desc }).eq('id', id);
         }
 
         function renderKanban() {
             const cols = ['wait', 'day1', 'day2', 'day3', 'day4'];
-            cols.forEach(s => document.getElementById('col-'+s).innerHTML = '');
+            cols.forEach(s => document.getElementById('col-' + s).innerHTML = '');
 
             tripData.forEach(item => {
                 const card = document.createElement('div');
-                card.className = `kanban-card type-${item.cat}`;
+                card.className = 'kanban-card';
+                
+                /* 카드 왼쪽 보더 색상 적용 */
+                let borderColor = '#ccc';
+                if(item.cat === '음식점') borderColor = 'var(--food-red)';
+                else if(item.cat === '카페') borderColor = 'var(--cafe-yellow)';
+                else if(item.cat === '명소') borderColor = 'var(--spot-blue)';
+                else if(item.cat === '쇼핑') borderColor = 'var(--shop-purple)';
+                else if(item.cat === '기타') borderColor = 'var(--etc-gray)';
+                card.style.borderLeftColor = borderColor;
+
+                const descText = item.desc || '';
                 card.innerHTML = `
-                    <span class="tag tag-${item.cat}">${item.cat}</span>
-                    <div style="font-weight:900;">${item.name}</div>
-                    <div class="desc" contenteditable="true" onblur="updateDesc(${item.id}, this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">
-                        ${item.desc || ""}
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="tag tag-${item.cat}">${item.cat}</span>
+                        <button onclick="returnToWait(${item.id})" style="border:none;background:none;color:#bbb;font-size:0.75rem;cursor:pointer;" title="Waitlist로 되돌리기">↩</button>
                     </div>
+                    <strong style="font-size:1rem; display:block; margin:5px 0;">${item.name}</strong>
+                    <div class="card-desc" id="desc-${item.id}" onclick="startEditDesc(${item.id}, \`${descText.replace(/`/g, "'")}\`)">${descText || '<span style="color:#ccc;">메모 추가...</span>'}</div>
                     <div class="card-ctrl">
                         <a href="javascript:void(0)" onclick="goMap('${item.name}')" class="btn-map-link">📍 지도</a>
                         <select class="move-sel" onchange="moveCard(${item.id}, this.value)">
-                            <option value="wait" ${item.status==='wait'?'selected':''}>Wait</option>
-                            <option value="day1" ${item.status==='day1'?'selected':''}>Day 1</option>
-                            <option value="day2" ${item.status==='day2'?'selected':''}>Day 2</option>
-                            <option value="day3" ${item.status==='day3'?'selected':''}>Day 3</option>
-                            <option value="day4" ${item.status==='day4'?'selected':''}>Day 4</option>
+                            <option value="wait"  ${item.status === 'wait'  ? 'selected' : ''}>Waitlist</option>
+                            <option value="day1"  ${item.status === 'day1'  ? 'selected' : ''}>Day 1</option>
+                            <option value="day2"  ${item.status === 'day2'  ? 'selected' : ''}>Day 2</option>
+                            <option value="day3"  ${item.status === 'day3'  ? 'selected' : ''}>Day 3</option>
+                            <option value="day4"  ${item.status === 'day4'  ? 'selected' : ''}>Day 4</option>
                         </select>
-                        <button onclick="moveCard(${item.id}, 'wait')" style="border:none; background:none; color:#ddd; font-size:1.1rem; cursor:pointer;">✕</button>
                     </div>
                 `;
-                document.getElementById('col-'+item.status).appendChild(card);
+                const colId = 'col-' + (item.status || 'wait');
+                const colEl = document.getElementById(colId);
+                if (colEl) colEl.appendChild(card);
             });
             updateDashboard();
         }
 
         function updateDashboard() {
-            const sum = document.getElementById('home-summary');
-            const planned = tripData.filter(t => t.status !== 'wait');
-            sum.innerHTML = planned.length ? planned.map(t => `<div style="font-size:0.9rem; margin-bottom:8px; padding-left:10px; border-left:3px solid var(--primary-pink);">📌 [${t.status.toUpperCase()}] ${t.name}</div>`).join('') : '<div style="color:#888; text-align:center;">일정을 배치해보세요!</div>';
+            const sum = document.getElementById('home-kanban-summary');
+            if (!sum) return;
+            const day1 = tripData.filter(t => t.status === 'day1');
+            sum.innerHTML = day1.length
+                ? day1.map(t => `<div class="summary-item" onclick="goMap('${t.name}')">📌 ${t.name}</div>`).join('')
+                : '<div class="summary-item" style="color:#888;">일정 보드에서 Day 1로 장소를 옮겨보세요!</div>';
         }
 
-        let checks = JSON.parse(localStorage.getItem('hk_check_items')) || [{text:"여권", done:false}];
-        function renderC() {
+        function subscribePlaces() {
+            sb.channel('places-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'hongkong2026' }, payload => {
+                    const { eventType, new: newRow, old: oldRow } = payload;
+                    if (eventType === 'INSERT') { tripData.push(newRow); }
+                    else if (eventType === 'UPDATE') {
+                        const idx = tripData.findIndex(t => t.id === newRow.id);
+                        if (idx !== -1) tripData[idx] = newRow;
+                    }
+                    else if (eventType === 'DELETE') { tripData = tripData.filter(t => t.id !== oldRow.id); }
+                    renderKanban();
+                    setSyncStatus('ok', '실시간 연결됨');
+                })
+                .subscribe();
+        }
+
+        async function loadChecklist() {
+            const { data, error } = await sb.from('checklist').select('*').order('created_at');
+            if (error) return;
+            checkData = data;
+            renderChecklist();
+        }
+
+        async function addCheckItem() {
+            const val = document.getElementById('newItem').value.trim();
+            if (!val) return;
+            setSyncStatus('loading', '저장 중...');
+            await sb.from('checklist').insert({ text: val, done: false });
+            document.getElementById('newItem').value = '';
+        }
+
+        async function toggleCheck(id, done) {
+            setSyncStatus('loading', '업데이트 중...');
+            await sb.from('checklist').update({ done: !done }).eq('id', id);
+        }
+
+        async function delCheck(id) {
+            setSyncStatus('loading', '삭제 중...');
+            await sb.from('checklist').delete().eq('id', id);
+        }
+
+        function renderChecklist() {
             const container = document.getElementById('checkListContainer');
-            if(!container) return;
-            container.innerHTML = checks.map((item, i) => `
+            if (!container) return;
+            container.innerHTML = checkData.map(item => `
                 <div class="check-item">
-                    <div class="check-content ${item.done ? 'checked-text' : ''}" onclick="toggleCheck(${i})">
-                        <input type="checkbox" ${item.done ? 'checked' : ''}>
+                    <div class="check-content ${item.done ? 'checked-text' : ''}" onclick="toggleCheck(${item.id}, ${item.done})">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheck(${item.id}, ${item.done})">
                         <span>${item.text}</span>
                     </div>
-                    <button class="del-check" onclick="delCheck(${i})">✕</button>
+                    <button class="del-check" onclick="delCheck(${item.id})">✕</button>
                 </div>
             `).join('');
-            localStorage.setItem('hk_check_items', JSON.stringify(checks));
         }
-        function toggleCheck(i) { checks[i].done = !checks[i].done; renderC(); }
-        function delCheck(i) { checks.splice(i, 1); renderC(); }
-        function addItem() { const val = document.getElementById('newItem').value; if(val) { checks.push({text:val, done:false}); renderC(); document.getElementById('newItem').value=''; } }
 
-        sb.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, loadData).subscribe();
-        window.onload = () => { loadData(); renderC(); };
+        function subscribeChecklist() {
+            sb.channel('checklist-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, payload => {
+                    const { eventType, new: newRow, old: oldRow } = payload;
+                    if (eventType === 'INSERT') { checkData.push(newRow); }
+                    else if (eventType === 'UPDATE') {
+                        const idx = checkData.findIndex(c => c.id === newRow.id);
+                        if (idx !== -1) checkData[idx] = newRow;
+                    }
+                    else if (eventType === 'DELETE') { checkData = checkData.filter(c => c.id !== oldRow.id); }
+                    renderChecklist();
+                    setSyncStatus('ok', '실시간 연결됨');
+                })
+                .subscribe();
+        }
+
+        async function init() {
+            await Promise.all([loadPlaces(), loadChecklist()]);
+            subscribePlaces();
+            subscribeChecklist();
+        }
+
+        init();
     </script>
 </body>
 </html>
