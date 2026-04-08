@@ -1,91 +1,252 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <style>
-        :root { 
-            --primary-pink: #ffafcc; 
+        :root {
+            --primary-pink: #ffafcc;
             --kitty-red: #ff4d6d;
-            --glass: rgba(255, 255, 255, 0.9);
+            --glass: rgba(255, 255, 255, 0.92);
             --food-red: #ff6b6b;
             --cafe-yellow: #ffd166;
             --spot-blue: #118ab2;
+            --radius: 16px;
         }
 
-        body { 
-            font-family: 'Noto Sans KR', sans-serif; 
+        * { -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
             margin: 0; padding: 0;
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
-                        url('Chungking Express.jpg') no-repeat center center fixed; 
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+                        url('Chungking Express.jpg') no-repeat center center fixed;
             background-size: cover; min-height: 100vh; color: #333;
+            overscroll-behavior: none;
         }
 
-        .menu-btn { position: fixed; top: 15px; left: 15px; z-index: 1000; font-size: 1.8rem; color: white; cursor: pointer; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        .sidebar { 
-            position: fixed; top: 0; left: -280px; width: 250px; height: 100%; 
-            background: #fff0f3; z-index: 1001; transition: 0.3s; padding: 60px 20px; 
-            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        /* ─── 공통 ────────────────────────────────────── */
+        .menu-btn { position: fixed; top: 12px; left: 12px; z-index: 1000; font-size: 1.8rem; color: white; cursor: pointer; text-shadow: 0 2px 5px rgba(0,0,0,0.5); padding: 4px 8px; }
+        .sidebar {
+            position: fixed; top: 0; left: -280px; width: 250px; height: 100%;
+            background: #fff0f3; z-index: 1001; transition: 0.3s ease; padding: 60px 20px;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.3);
         }
         .sidebar.active { left: 0; }
-        .nav-item { padding: 15px; margin-bottom: 10px; background: white; border-radius: 10px; cursor: pointer; font-weight: 900; color: var(--kitty-red); text-align: center; border: 1px solid var(--primary-pink); }
+        .nav-item { padding: 15px; margin-bottom: 10px; background: white; border-radius: 12px; cursor: pointer; font-weight: 900; color: var(--kitty-red); text-align: center; border: 1px solid var(--primary-pink); transition: transform 0.15s; }
+        .nav-item:active { transform: scale(0.96); }
 
-        .section { display: none; padding: 60px 15px 20px 15px; animation: fadeIn 0.3s; }
+        .section { display: none; padding: 56px 12px 20px 12px; animation: fadeIn 0.3s; }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        h1 { font-weight: 900; text-align: center; color: white; font-size: 1.8rem; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); margin: 20px 0; }
-        .card { background: var(--glass); padding: 20px; border-radius: 15px; margin-bottom: 20px; backdrop-filter: blur(10px); }
+        h1 { font-weight: 900; text-align: center; color: white; font-size: 1.7rem; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); margin: 16px 0; }
+        .card { background: var(--glass); padding: 18px; border-radius: var(--radius); margin-bottom: 16px; backdrop-filter: blur(12px); box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
 
         .map-wrapper { width: 100%; height: 350px; border-radius: 12px; overflow: hidden; border: 2px solid white; background: #eee; }
         .map-wrapper iframe { width: 100% !important; height: 100% !important; border: none; }
 
-        .summary-title { font-weight: 900; font-size: 1.1rem; color: var(--kitty-red); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .summary-item { font-size: 0.95rem; margin-bottom: 10px; color: #333; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px; border-left: 5px solid var(--primary-pink); cursor: pointer; font-weight: 700; }
+        .summary-title { font-weight: 900; font-size: 1.05rem; color: var(--kitty-red); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .summary-item { font-size: 0.92rem; margin-bottom: 8px; color: #333; padding: 10px 12px; background: rgba(255,255,255,0.5); border-radius: 10px; border-left: 4px solid var(--primary-pink); cursor: pointer; font-weight: 700; transition: transform 0.15s; }
+        .summary-item:active { transform: scale(0.97); }
 
-        /* 칸반 */
-        .kanban-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
-        .kanban-column { min-width: 260px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.3); }
-        .col-header { color: white; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; display: flex; justify-content: space-between; text-shadow: 1px 1px 2px black; }
-        .kanban-card { background: white; border-radius: 8px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .tag { font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; color: white; font-weight: bold; }
-        .tag-음식점 { background: var(--food-red); } 
-        .tag-카페 { background: var(--cafe-yellow); color: #333; } 
-        .tag-명소 { background: var(--spot-blue); }
-        
-        .card-ctrl { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 5px; }
-        .move-sel { font-size: 0.7rem; padding: 2px; border-radius: 4px; flex: 1; }
-        .btn-map-link { font-size: 0.7rem; color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 2px 5px; border-radius: 4px; }
+        .tag { font-size: 0.6rem; padding: 3px 8px; border-radius: 6px; color: white; font-weight: bold; display: inline-block; letter-spacing: 0.3px; }
+        .tag-음식점 { background: var(--food-red); }
+        .tag-카페   { background: var(--cafe-yellow); color: #333; }
+        .tag-명소   { background: var(--spot-blue); }
+
+        /* ═══ 플로우차트 ═══════════════════════════════ */
+        .flow-container { max-width: 540px; margin: 0 auto; padding-bottom: 60px; }
+
+        .flow-day { margin-bottom: 6px; }
+
+        .flow-day-header {
+            position: sticky; top: 50px; z-index: 10;
+            padding: 13px 18px; border-radius: 14px; text-align: center;
+            font-weight: 900; font-size: 1rem; color: white;
+            margin-bottom: 14px; letter-spacing: 0.5px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            cursor: pointer; user-select: none;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: transform 0.15s;
+        }
+        .flow-day-header:active { transform: scale(0.98); }
+        .flow-day-header .toggle-icon { font-size: 0.7rem; transition: transform 0.3s; }
+        .flow-day-header .toggle-icon.collapsed { transform: rotate(-90deg); }
+        .flow-day-header .badge-count {
+            background: rgba(255,255,255,0.3); font-size: 0.7rem;
+            padding: 2px 8px; border-radius: 10px; font-weight: 700;
+        }
+        .flow-day-header.day1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .flow-day-header.day2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .flow-day-header.day3 { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #1a1a2e; }
+        .flow-day-header.day4 { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #1a1a2e; }
+        .flow-day-header.wait { background: linear-gradient(135deg, #a8a8a8, #6c6c6c); }
+
+        .flow-day-body { overflow: hidden; transition: max-height 0.4s ease, opacity 0.3s; }
+        .flow-day-body.collapsed { max-height: 0 !important; opacity: 0; pointer-events: none; }
+
+        /* 드롭존 */
+        .flow-drop-zone {
+            min-height: 50px; padding: 4px 0;
+            border-radius: 12px; transition: background 0.2s, border-color 0.2s;
+            border: 2px dashed transparent;
+        }
+        .flow-drop-zone.sortable-drag-over {
+            background: rgba(255,175,204,0.12);
+            border-color: rgba(255,77,109,0.35);
+        }
+        .flow-drop-zone-empty {
+            text-align: center; color: rgba(255,255,255,0.4);
+            font-size: 0.82rem; padding: 16px 0;
+            pointer-events: none;
+        }
+
+        /* 지역 디바이더 */
+        .area-divider {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 0 8px 6px; user-select: none;
+        }
+        .area-divider .area-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(6px);
+            color: white; font-weight: 700; font-size: 0.78rem;
+            padding: 5px 13px; border-radius: 20px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .area-divider .area-line {
+            flex: 1; height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0.25), transparent);
+        }
+
+        /* ─── 카드 ───── */
+        .flow-card {
+            position: relative;
+            background: white; border-radius: var(--radius);
+            overflow: hidden; margin-bottom: 12px;
+            box-shadow: 0 3px 16px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+        .flow-card.cat-음식점 { border-left-color: var(--food-red); }
+        .flow-card.cat-카페   { border-left-color: var(--cafe-yellow); }
+        .flow-card.cat-명소   { border-left-color: var(--spot-blue); }
+
+        .flow-card:active { transform: scale(0.985); }
+
+        /* 드래그 상태 */
+        .flow-card.sortable-ghost {
+            opacity: 0.4; transform: scale(0.95);
+        }
+        .flow-card.sortable-chosen {
+            box-shadow: 0 8px 32px rgba(255,77,109,0.3);
+            transform: scale(1.02); z-index: 100;
+        }
+        .flow-card.sortable-drag {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            transform: rotate(1.5deg) scale(1.04);
+        }
+
+        /* 드래그 핸들 */
+        .drag-handle {
+            position: absolute; top: 8px; right: 8px; z-index: 5;
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.35); backdrop-filter: blur(4px);
+            border-radius: 8px; color: white; font-size: 1rem;
+            cursor: grab; touch-action: none;
+            transition: background 0.15s;
+        }
+        .drag-handle:active { cursor: grabbing; background: rgba(255,77,109,0.6); }
+
+        .flow-card-visual {
+            width: 100%; height: 140px;
+            position: relative; overflow: hidden;
+        }
+        .flow-card-visual img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            transition: transform 0.3s;
+        }
+        .flow-card:active .flow-card-visual img { transform: scale(1.03); }
+        .flow-card-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.8rem;
+        }
+        .flow-card-visual .img-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.6));
+            padding: 24px 14px 10px; color: white;
+        }
+        .flow-card-visual .img-overlay .place-name {
+            font-weight: 900; font-size: 1.02rem;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+        }
+
+        .flow-card-body { padding: 10px 14px 12px; }
+        .flow-card-body .brief {
+            font-size: 0.78rem; color: #777; margin-bottom: 6px; line-height: 1.4;
+        }
+
+        .flow-card-ctrl {
+            display: flex; align-items: center; gap: 6px;
+            padding-top: 8px; border-top: 1px solid #f0f0f0;
+        }
+        .flow-move-sel {
+            font-size: 0.72rem; padding: 5px 6px; border-radius: 8px;
+            border: 1px solid #e0e0e0; flex: 1; font-family: inherit;
+            background: #fafafa; color: #555;
+        }
+        .flow-btn-map {
+            font-size: 0.72rem; color: white; text-decoration: none; font-weight: 700;
+            background: #007bff; padding: 5px 10px; border-radius: 8px;
+            white-space: nowrap; transition: background 0.15s;
+        }
+        .flow-btn-map:active { background: #0056b3; }
+        .flow-btn-return {
+            font-size: 0.8rem; color: #bbb; border: 1px solid #e0e0e0;
+            padding: 4px 8px; border-radius: 8px; cursor: pointer;
+            background: white; font-family: inherit; transition: color 0.15s;
+        }
+        .flow-btn-return:active { color: var(--kitty-red); border-color: var(--kitty-red); }
+
+        .flow-arrow {
+            text-align: center; color: rgba(255,255,255,0.35);
+            font-size: 0.9rem; margin: 4px 0 8px; letter-spacing: 4px;
+        }
 
         /* desc 편집 */
-        .card-desc { font-size: 0.75rem; color: #888; margin: 5px 0; min-height: 18px; cursor: pointer; border-radius: 4px; padding: 2px 4px; }
-        .card-desc:hover { background: #f5f5f5; }
-        .card-desc-input { font-size: 0.75rem; width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 3px 5px; box-sizing: border-box; outline: none; font-family: inherit; resize: none; }
+        .flow-card-desc { font-size: 0.75rem; color: #999; margin: 4px 0; min-height: 16px; cursor: pointer; border-radius: 6px; padding: 3px 5px; transition: background 0.15s; }
+        .flow-card-desc:hover, .flow-card-desc:active { background: #f5f5f5; }
+        .card-desc-input { font-size: 0.75rem; width: 100%; border: 1.5px solid var(--primary-pink); border-radius: 6px; padding: 5px 6px; box-sizing: border-box; outline: none; font-family: inherit; resize: none; }
 
-        /* 체크리스트 */
+        /* ─── 체크리스트 ──────────────────────────────── */
         .check-item { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .check-content { display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; }
         .check-content input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--kitty-red); }
         .checked-text span { text-decoration: line-through; color: #aaa; }
-        .del-check { color: #ccc; border: none; background: none; font-size: 1.2rem; cursor: pointer; }
+        .del-check { color: #ccc; border: none; background: none; font-size: 1.2rem; cursor: pointer; padding: 4px 8px; }
 
-        /* 버튼 */
-        .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
+        /* ─── 버튼 ────────────────────────────────────── */
+        .main-btn { font-weight: 700; background: var(--kitty-red); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; text-align: center; text-decoration: none; display: block; box-sizing: border-box; transition: transform 0.15s; }
+        .main-btn:active { transform: scale(0.97); }
         .btn-weather { background: #1a73e8; margin-top: 10px; }
         .btn-talk { background: #03c75a; margin-top: 10px; }
-        
+
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; }
         .overlay.active { display: block; }
         input[type="text"] { padding: 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; width: 100%; box-sizing: border-box; }
 
-        /* 로딩 / 동기화 상태 */
-        .sync-badge { 
-            position: fixed; bottom: 15px; right: 15px; 
-            background: rgba(0,0,0,0.7); color: white; 
-            font-size: 0.7rem; padding: 6px 12px; border-radius: 20px; 
+        .sync-badge {
+            position: fixed; bottom: 15px; right: 15px;
+            background: rgba(0,0,0,0.7); color: white;
+            font-size: 0.7rem; padding: 6px 12px; border-radius: 20px;
             z-index: 999; transition: 0.3s; display: flex; align-items: center; gap: 5px;
         }
         .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf50; }
@@ -93,30 +254,32 @@
         .sync-dot.error { background: #ff4d6d; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-        /* cat 선택 */
         .cat-sel { font-size: 0.7rem; padding: 2px 4px; border-radius: 4px; border: 1px solid #ddd; }
 
-        /* 환율 */
+        /* ─── 환율 ────────────────────────────────────── */
         .rate-main { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #ff4d6d, #ff8fa3); border-radius: 12px; padding: 16px 20px; color: white; margin-bottom: 12px; }
         .rate-main .rate-label { font-size: 0.75rem; opacity: 0.85; }
         .rate-main .rate-value { font-size: 1.6rem; font-weight: 900; }
         .rate-main .rate-sub { font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
-        .rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-        .rate-item { background: rgba(255,255,255,0.6); border-radius: 10px; padding: 10px 12px; text-align: center; }
-        .rate-item .ri-flag { font-size: 1.1rem; }
-        .rate-item .ri-name { font-size: 0.65rem; color: #888; margin: 2px 0; }
-        .rate-item .ri-val { font-size: 0.95rem; font-weight: 900; color: #333; }
         .rate-updated { font-size: 0.65rem; color: #aaa; text-align: right; margin-bottom: 10px; }
-
-        /* 환율 계산기 */
         .calc-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .calc-input { flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #ffafcc; font-size: 1rem; font-weight: 700; outline: none; text-align: right; font-family: inherit; }
         .calc-input:focus { border-color: var(--kitty-red); }
         .calc-currency { font-size: 0.8rem; font-weight: 900; color: #888; min-width: 36px; }
         .calc-arrow { text-align: center; color: var(--kitty-red); font-size: 1.2rem; margin: 2px 0; }
         .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-        .quick-btn { font-size: 0.7rem; padding: 5px 10px; border-radius: 20px; border: 1.5px solid var(--primary-pink); background: white; color: var(--kitty-red); cursor: pointer; font-weight: 700; font-family: inherit; }
-        .quick-btn:active { background: var(--primary-pink); }
+        .quick-btn { font-size: 0.7rem; padding: 5px 10px; border-radius: 20px; border: 1.5px solid var(--primary-pink); background: white; color: var(--kitty-red); cursor: pointer; font-weight: 700; font-family: inherit; transition: transform 0.15s; }
+        .quick-btn:active { background: var(--primary-pink); transform: scale(0.94); }
+
+        /* ─── 드래그 힌트 토스트 ──────────────────────── */
+        .drag-hint {
+            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; font-size: 0.78rem;
+            padding: 8px 18px; border-radius: 20px; z-index: 99;
+            opacity: 0; transition: opacity 0.4s; pointer-events: none;
+            backdrop-filter: blur(6px);
+        }
+        .drag-hint.show { opacity: 1; }
     </style>
 </head>
 <body>
@@ -124,44 +287,40 @@
     <div class="menu-btn" onclick="toggleSidebar()">☰</div>
     <div class="overlay" onclick="toggleSidebar()"></div>
     <div class="sync-badge" id="syncBadge"><div class="sync-dot loading" id="syncDot"></div><span id="syncText">연결 중...</span></div>
+    <div class="drag-hint" id="dragHint">카드를 길게 눌러 다른 Day로 이동하세요</div>
 
     <div class="sidebar" id="sidebar">
         <h3 style="text-align:center; color:var(--kitty-red); font-weight:900;">HK 2026 🎬</h3>
         <div class="nav-item" onclick="showSection('home')">🏠 메인 홈</div>
-        <div class="nav-item" onclick="showSection('kanban')">📋 일정 보드</div>
+        <div class="nav-item" onclick="showSection('flow')">🗺️ 여행 플로우</div>
         <div class="nav-item" onclick="showSection('map')">📍 전체 지도</div>
         <div class="nav-item" onclick="showSection('check')">🎒 체크리스트</div>
         <hr style="border:0; border-top:1px solid #ffafcc; margin: 20px 0;">
         <p style="font-size:0.7rem; color:#999; text-align:center;">Chungking Express Edition</p>
     </div>
 
-    <!-- 홈 -->
+    <!-- ═══ 홈 ═══ -->
     <div id="home" class="section active">
         <h1>🄷🄾🄽🄶 🄺🄾🄽🄶🎬</h1>
 
-        <!-- 1. 기상청 -->
         <div class="card">
             <span class="summary-title">⛅ 실시간 날씨 & 기상청</span>
             <a href="https://www.weather.gov.hk/tc/index.html" target="_blank" class="main-btn btn-weather">홍콩 기상청(HKO) 홈페이지</a>
         </div>
 
-        <!-- 2. 실시간톡 -->
         <div class="card">
             <span class="summary-title">💬 네이버 실시간 홍콩 여행톡</span>
             <a href="https://ntalk.naver.com/ch/N125lX" target="_blank" class="main-btn btn-talk">여행톡 바로가기</a>
         </div>
 
-        <!-- 3. 일정 -->
         <div class="card">
             <span class="summary-title">📝 오늘의 일정 요약 (Day 1)</span>
             <div id="home-kanban-summary"></div>
-            <button onclick="showSection('kanban')" class="main-btn" style="margin-top:15px; background: var(--spot-blue);">전체 일정 관리하러 가기</button>
+            <button onclick="showSection('flow')" class="main-btn" style="margin-top:15px; background: var(--spot-blue);">전체 일정 관리하러 가기</button>
         </div>
 
-        <!-- 4. 환율 계산기 -->
         <div class="card">
             <span class="summary-title">💱 환율 계산기 🇰🇷↔🇭🇰 <span id="rateLoadingDot" style="font-size:0.6rem; color:#aaa;">불러오는 중...</span></span>
-
             <div class="rate-main">
                 <div>
                     <div class="rate-label">실시간 기준환율</div>
@@ -171,7 +330,6 @@
                 <div style="font-size:2rem;">🎬</div>
             </div>
             <div class="rate-updated" id="rateUpdatedAt"></div>
-
             <div class="calc-row">
                 <input class="calc-input" type="number" id="calcKRW" placeholder="0" oninput="calcFromKRW()" />
                 <span class="calc-currency">🇰🇷 원</span>
@@ -190,7 +348,6 @@
             </div>
         </div>
 
-        <!-- 5. 지도 -->
         <div class="card">
             <span class="summary-title">📍 나만의 지도 루트</span>
             <div class="map-wrapper">
@@ -200,9 +357,10 @@
         </div>
     </div>
 
-    <!-- 칸반 -->
-    <div id="kanban" class="section">
-        <h1>📅 일정 플래너</h1>
+    <!-- ═══ 여행 플로우 ═══ -->
+    <div id="flow" class="section">
+        <h1>🗺️ 여행 플로우</h1>
+
         <div class="card">
             <span class="summary-title">➕ 장소 추가</span>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -215,16 +373,11 @@
                 <button onclick="addPlace()" class="main-btn" style="width:70px; padding:12px;">추가</button>
             </div>
         </div>
-        <div class="kanban-container">
-            <div class="kanban-column"><div class="col-header">⏳ Waitlist</div><div id="col-wait"></div></div>
-            <div class="kanban-column"><div class="col-header">☀️ Day 1</div><div id="col-day1"></div></div>
-            <div class="kanban-column"><div class="col-header">☀️ Day 2</div><div id="col-day2"></div></div>
-            <div class="kanban-column"><div class="col-header">☀️ Day 3</div><div id="col-day3"></div></div>
-            <div class="kanban-column"><div class="col-header">☀️ Day 4</div><div id="col-day4"></div></div>
-        </div>
+
+        <div class="flow-container" id="flowContainer"></div>
     </div>
 
-    <!-- 지도 -->
+    <!-- ═══ 지도 ═══ -->
     <div id="map" class="section">
         <h1>📍 전체 지도</h1>
         <div class="card">
@@ -234,7 +387,7 @@
         </div>
     </div>
 
-    <!-- 체크리스트 -->
+    <!-- ═══ 체크리스트 ═══ -->
     <div id="check" class="section">
         <h1>🎒 재웅 ! 꼭 챙겨 !</h1>
         <div class="card">
@@ -247,7 +400,7 @@
     </div>
 
     <script>
-        // ─── Supabase 초기화 ───────────────────────────────────────────
+        // ─── Supabase ───────────────────────────────────────────────
         const SUPABASE_URL = 'https://sirhztixtrpafzwwbbqn.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_wy221aQzwwUn8pG2YXN8ww_5-6iF3SM';
         const { createClient } = supabase;
@@ -255,16 +408,73 @@
 
         let tripData = [];
         let checkData = [];
+        let sortableInstances = [];
+        let collapsedDays = {};
 
-        // ─── 동기화 상태 표시 ─────────────────────────────────────────
+        // ─── 장소 메타데이터 ─────────────────────────────────────────
+        const PLACE_META = {
+            '카우키':             { area: 'Central',       emoji: '🍖', brief: '현지인 추천 로컬 맛집', color: '#ff6b6b',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/HK_Central_Gough_Street_Kau_Kee_Restaurant.jpg?width=400' },
+            '하프웨이 커피':       { area: 'Sheung Wan',    emoji: '☕', brief: '캣 스트리트 옆 힙한 로스터리 카페', color: '#ffd166',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/HK_Sheung_Wan_Upper_Lascar_Row_Cat_Street_2.JPG?width=400' },
+            '타이콴 문화예술센터': { area: 'Central',       emoji: '🏛️', brief: '옛 중앙경찰서 → 복합문화공간, 필수 코스', color: '#118ab2',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/Tai_Kwun_overview_201810.jpg?width=400' },
+            '운동화거리':         { area: 'Mong Kok',      emoji: '👟', brief: '스니커즈 50+매장 밀집, 파 유엔 스트리트', color: '#06d6a0',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/HK_Mong_Kok_Fa_Yuen_Street_evening_walk-up_buildings_Sept-2012.JPG?width=400' },
+            '란퐁유엔 소호점':     { area: 'Central',       emoji: '🧋', brief: '1952년 원조 실크스타킹 밀크티', color: '#ff6b6b',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/HK_Central_Gage_Street_Lan_Fong_Yuen_restaurant.jpg?width=400' },
+            '템플스트리트 야시장': { area: 'Jordan',        emoji: '🌙', brief: '홍콩 대표 야시장, 저녁 필수 방문', color: '#073b4c',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/HK_Temple_Street_Night_Market_overview_2009.jpg?width=400' },
+            '셩헤이':             { area: 'Kennedy Town',  emoji: '🍜', brief: '케네디타운 로컬 레스토랑', color: '#ff6b6b' },
+            'Luk On Kui':         { area: 'Sheung Wan',    emoji: '🥘', brief: '데보 로드 웨스트, 전통 광동 요리', color: '#ff6b6b' },
+            'Wah Lok Cafe':       { area: 'Central',       emoji: '☕', brief: '통 스트리트 현지 찻집', color: '#ffd166' },
+            '칠리파가라':         { area: 'Central',       emoji: '🌶️', brief: '올드 베일리 스트리트, 사천요리 전문', color: '#ff6b6b' },
+            '싱흥유엔':           { area: 'Central',       emoji: '🍅', brief: '유명 토마토 라면 & 달걀토스트', color: '#ff6b6b',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/Sing_Heung_Yuen_201510.jpg?width=400' },
+            'Kowloon Taproom':    { area: 'Tsim Sha Tsui', emoji: '🍺', brief: '크래프트 맥주 전문 탭룸', color: '#073b4c' },
+            '익청빌딩':           { area: 'Quarry Bay',    emoji: '🏢', brief: '몬스터 빌딩, 인생샷 성지', color: '#118ab2',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/Yick_Cheong_Building.JPG?width=400' },
+            'E N':                { area: 'Causeway Bay',  emoji: '☕', brief: '레이튼 센터, 감성 디저트 카페', color: '#ffd166' },
+            '상기콘지':           { area: 'Sheung Wan',    emoji: '🍚', brief: '버드 스트리트, 전통 죽(congee) 전문', color: '#ff6b6b' },
+            '침차이키':           { area: 'Central',       emoji: '🥟', brief: '미쉐린 완탕면, 웰링턴 스트리트', color: '#ff6b6b',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/HK_Central_Wellington_Street_Tsim_Chai_Kee_Noodle_Shop.jpg?width=400' },
+            'Oi Man Sang':        { area: 'Sham Shui Po',  emoji: '🥡', brief: '삼수이포 전통 로컬 맛집', color: '#ff6b6b',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/HK_SSP_%E6%B7%B1%E6%B0%B4%E5%9F%97_Sham_Shui_Po_%E6%A1%82%E6%9E%97%E8%A1%97_Kweilin_Street_%E9%B4%A8%E5%AF%AE%E8%A1%97_Apliu_Street_%E9%BE%8D%E6%B4%A5%E7%BE%8E%E9%A3%9F_Dragon_Lun_Chun_snack_food_take-away_shop_Nov-2013.JPG?width=400' },
+            'Urban Coffee Roaster': { area: 'Tsim Sha Tsui', emoji: '☕', brief: '브리스톨 애비뉴 스페셜티 커피', color: '#ffd166' },
+            'Espresso Alchemy':   { area: 'Tsim Sha Tsui', emoji: '☕', brief: '하버시티 내 시그니처 라떼', color: '#ffd166',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/Harbour_City,_Ocean_Terminal_Forecourt_(Hong_Kong).jpg?width=400' },
+            'Stussy Hong Kong':   { area: 'Causeway Bay',  emoji: '👕', brief: '스트릿웨어 편집샵, 팍 샤 로드', color: '#06d6a0' },
+            '레이디스마켓':       { area: 'Mong Kok',      emoji: '🛍️', brief: '통초이 스트리트 대표 쇼핑 시장', color: '#118ab2',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/1_mong_kok_hong_kong_night_2011.JPG?width=400' },
+            'CHAGEE (K11 Art Mall)': { area: 'Tsim Sha Tsui', emoji: '🍵', brief: 'K11 아트몰, 프리미엄 밀크티', color: '#ffd166',
+                                    img: 'https://commons.wikimedia.org/wiki/Special:FilePath/K11_Art_Mall_Void_201506.jpg?width=400' },
+        };
+
+        const AREA_ORDER = {
+            day1: ['Tsim Sha Tsui', 'Mong Kok', 'Jordan'],
+            day2: ['Sheung Wan', 'Central'],
+            _default: ['Tsim Sha Tsui', 'Sheung Wan', 'Central', 'Mong Kok', 'Jordan', 'Causeway Bay', 'Quarry Bay', 'Kennedy Town', 'Sham Shui Po'],
+        };
+        const AREA_EMOJI = {
+            'Tsim Sha Tsui': '🌃', 'Sheung Wan': '🏮', 'Central': '🏙️',
+            'Mong Kok': '🎯', 'Jordan': '🌙', 'Causeway Bay': '🛍️',
+            'Quarry Bay': '📸', 'Kennedy Town': '🌊', 'Sham Shui Po': '🎨',
+        };
+        const DAY_LABELS = {
+            day1: 'DAY 1',
+            day2: 'DAY 2',
+            day3: 'DAY 3',
+            day4: 'DAY 4',
+            wait: '⏳ 미배정 Waitlist',
+        };
+
+        // ─── UI 헬퍼 ──────────────────────────────────────────────────
         function setSyncStatus(state, msg) {
             const dot = document.getElementById('syncDot');
             const txt = document.getElementById('syncText');
             dot.className = 'sync-dot' + (state === 'ok' ? '' : state === 'loading' ? ' loading' : ' error');
             txt.textContent = msg;
         }
-
-        // ─── 사이드바 ─────────────────────────────────────────────────
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
             document.querySelector('.overlay').classList.toggle('active');
@@ -274,26 +484,48 @@
             document.getElementById(id).classList.add('active');
             if (document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
             updateDashboard();
+            if (id === 'flow') showDragHint();
         }
-
-        // ─── 지도 열기 ────────────────────────────────────────────────
         function goMap(name) {
             window.open(`https://www.google.com/maps/search/${encodeURIComponent(name + " Hong Kong")}`, '_blank');
         }
+        function adjustColor(hex, amount) {
+            hex = hex.replace('#', '');
+            const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
+            const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
+            const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
+            return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+        }
+
+        // 드래그 힌트 (최초 1회)
+        let hintShown = localStorage.getItem('dragHintShown');
+        function showDragHint() {
+            if (hintShown) return;
+            const el = document.getElementById('dragHint');
+            el.classList.add('show');
+            setTimeout(() => { el.classList.remove('show'); hintShown = true; localStorage.setItem('dragHintShown', '1'); }, 3500);
+        }
+
+        // Day 접기/펼치기
+        function toggleDay(dayKey) {
+            collapsedDays[dayKey] = !collapsedDays[dayKey];
+            const body = document.getElementById('body-' + dayKey);
+            const icon = document.getElementById('icon-' + dayKey);
+            if (body) body.classList.toggle('collapsed', collapsedDays[dayKey]);
+            if (icon) icon.classList.toggle('collapsed', collapsedDays[dayKey]);
+        }
 
         // ══════════════════════════════════════════════════════════════
-        // 칸반 (hongkong2026 테이블)
+        // 데이터 (Supabase)
         // ══════════════════════════════════════════════════════════════
-
         async function loadPlaces() {
             setSyncStatus('loading', '불러오는 중...');
             const { data, error } = await sb.from('hongkong2026').select('*').order('created_at');
             if (error) { setSyncStatus('error', '연결 오류'); return; }
             tripData = data;
-            renderKanban();
+            renderFlow();
             setSyncStatus('ok', '실시간 연결됨');
         }
-
         async function addPlace() {
             const name = document.getElementById('newPlaceName').value.trim();
             const cat = document.getElementById('newPlaceCat').value;
@@ -304,20 +536,19 @@
             document.getElementById('newPlaceName').value = '';
             goMap(name);
         }
-
         async function moveCard(id, status) {
-            setSyncStatus('loading', '업데이트 중...');
+            setSyncStatus('loading', '이동 중...');
             await sb.from('hongkong2026').update({ status }).eq('id', id);
         }
-
         async function returnToWait(id) {
-            setSyncStatus('loading', '업데이트 중...');
+            setSyncStatus('loading', '이동 중...');
             await sb.from('hongkong2026').update({ status: 'wait' }).eq('id', id);
         }
 
         // desc 인라인 편집
         function startEditDesc(id, currentDesc) {
             const el = document.getElementById('desc-' + id);
+            if (!el) return;
             const textarea = document.createElement('textarea');
             textarea.className = 'card-desc-input';
             textarea.value = currentDesc || '';
@@ -328,84 +559,246 @@
             el.replaceWith(textarea);
             textarea.focus();
         }
-
         async function saveDesc(id, desc) {
             setSyncStatus('loading', '저장 중...');
             await sb.from('hongkong2026').update({ desc }).eq('id', id);
         }
 
-        function renderKanban() {
-            const cols = ['wait', 'day1', 'day2', 'day3', 'day4'];
-            cols.forEach(s => document.getElementById('col-' + s).innerHTML = '');
+        // ══════════════════════════════════════════════════════════════
+        // 플로우차트 렌더링 + 드래그앤드롭
+        // ══════════════════════════════════════════════════════════════
 
+        function renderFlow() {
+            const container = document.getElementById('flowContainer');
+            if (!container) return;
+
+            // 기존 Sortable 정리
+            sortableInstances.forEach(s => s.destroy());
+            sortableInstances = [];
+
+            // 일별 그룹핑
+            const groups = { day1: [], day2: [], day3: [], day4: [], wait: [] };
             tripData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'kanban-card';
-                const descText = item.desc || '';
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="tag tag-${item.cat}">${item.cat}</span>
-                        <button onclick="returnToWait(${item.id})" style="border:none;background:none;color:#bbb;font-size:0.75rem;cursor:pointer;" title="Waitlist로 되돌리기">↩</button>
-                    </div>
-                    <strong style="font-size:1rem; display:block; margin:5px 0;">${item.name}</strong>
-                    <div class="card-desc" id="desc-${item.id}" onclick="startEditDesc(${item.id}, \`${descText.replace(/`/g, "'")}\`)">${descText || '<span style="color:#ccc;">메모 추가...</span>'}</div>
-                    <div class="card-ctrl">
-                        <a href="javascript:void(0)" onclick="goMap('${item.name}')" class="btn-map-link">📍 지도</a>
-                        <select class="move-sel" onchange="moveCard(${item.id}, this.value)">
-                            <option value="wait"  ${item.status === 'wait'  ? 'selected' : ''}>Waitlist</option>
-                            <option value="day1"  ${item.status === 'day1'  ? 'selected' : ''}>Day 1</option>
-                            <option value="day2"  ${item.status === 'day2'  ? 'selected' : ''}>Day 2</option>
-                            <option value="day3"  ${item.status === 'day3'  ? 'selected' : ''}>Day 3</option>
-                            <option value="day4"  ${item.status === 'day4'  ? 'selected' : ''}>Day 4</option>
-                        </select>
-                    </div>
-                `;
-                const colId = 'col-' + (item.status || 'wait');
-                const colEl = document.getElementById(colId);
-                if (colEl) colEl.appendChild(card);
+                const s = item.status || 'wait';
+                if (groups[s]) groups[s].push(item);
+                else groups.wait.push(item);
             });
+
+            let html = '';
+
+            for (const [dayKey, dayLabel] of Object.entries(DAY_LABELS)) {
+                const items = groups[dayKey] || [];
+                const isCollapsed = collapsedDays[dayKey] || false;
+                const count = items.length;
+
+                html += `<div class="flow-day">`;
+                html += `<div class="flow-day-header ${dayKey}" onclick="toggleDay('${dayKey}')">
+                    <span class="toggle-icon ${isCollapsed ? 'collapsed' : ''}">▼</span>
+                    <span>${dayLabel}</span>
+                    <span class="badge-count">${count}</span>
+                </div>`;
+
+                html += `<div class="flow-day-body ${isCollapsed ? 'collapsed' : ''}" id="body-${dayKey}" style="max-height: ${isCollapsed ? 0 : 9999}px;">`;
+                html += `<div class="flow-drop-zone" id="drop-${dayKey}" data-day="${dayKey}">`;
+
+                if (count === 0) {
+                    html += `<div class="flow-drop-zone-empty">여기에 카드를 드래그하세요</div>`;
+                } else {
+                    // 지역별 서브그룹 (시각 표시용)
+                    const areaMap = {};
+                    items.forEach(p => {
+                        const meta = PLACE_META[p.name] || {};
+                        const area = meta.area || '기타';
+                        if (!areaMap[area]) areaMap[area] = [];
+                        areaMap[area].push(p);
+                    });
+                    const order = AREA_ORDER[dayKey] || AREA_ORDER._default;
+                    const sortedAreas = Object.keys(areaMap).sort((a, b) => {
+                        const ai = order.indexOf(a), bi = order.indexOf(b);
+                        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+                    });
+
+                    sortedAreas.forEach((area, areaIdx) => {
+                        const areaEmoji = AREA_EMOJI[area] || '📍';
+                        // 지역 디바이더 (드래그 불가)
+                        html += `<div class="area-divider" data-area-divider="true">
+                            <span class="area-pill">${areaEmoji} ${area}</span>
+                            <span class="area-line"></span>
+                        </div>`;
+                        areaMap[area].forEach(item => {
+                            html += buildFlowCard(item);
+                        });
+                        if (areaIdx < sortedAreas.length - 1) {
+                            html += `<div class="flow-arrow" data-area-divider="true">· · ·</div>`;
+                        }
+                    });
+                }
+
+                html += `</div>`; // drop-zone
+                html += `</div>`; // day-body
+                html += `</div>`; // flow-day
+            }
+
+            container.innerHTML = html;
+            initSortable();
             updateDashboard();
         }
 
+        function buildFlowCard(item) {
+            const meta = PLACE_META[item.name] || {};
+            const descText = item.desc || '';
+            const safeDesc = descText.replace(/`/g, "'").replace(/"/g, '&quot;');
+
+            let visualHTML = '';
+            if (meta.img) {
+                visualHTML = `
+                    <div class="flow-card-visual">
+                        <img src="${meta.img}" alt="${item.name}" loading="lazy"
+                             onerror="this.parentElement.innerHTML='<div class=\\'flow-card-placeholder\\' style=\\'background:linear-gradient(135deg, ${meta.color || '#ccc'}, ${adjustColor(meta.color || '#ccc', -30)});\\'>${meta.emoji || '📍'}</div><div class=\\'img-overlay\\'><span class=\\'place-name\\'>${item.name}</span></div>'">
+                        <div class="img-overlay"><span class="place-name">${item.name}</span></div>
+                    </div>`;
+            } else {
+                visualHTML = `
+                    <div class="flow-card-visual">
+                        <div class="flow-card-placeholder" style="background: linear-gradient(135deg, ${meta.color || '#ccc'}, ${adjustColor(meta.color || '#ccc', -30)});">
+                            ${meta.emoji || '📍'}
+                        </div>
+                        <div class="img-overlay"><span class="place-name">${item.name}</span></div>
+                    </div>`;
+            }
+
+            return `
+                <div class="flow-card cat-${item.cat}" data-id="${item.id}">
+                    <div class="drag-handle">⠿</div>
+                    ${visualHTML}
+                    <div class="flow-card-body">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <span class="tag tag-${item.cat}">${item.cat}</span>
+                            <span style="font-size:0.65rem; color:#bbb;">${meta.area || ''}</span>
+                        </div>
+                        ${meta.brief ? `<div class="brief">${meta.brief}</div>` : ''}
+                        <div class="flow-card-desc" id="desc-${item.id}" onclick="startEditDesc(${item.id}, '${safeDesc}')">${descText || '<span style="color:#ccc;">메모 추가...</span>'}</div>
+                        <div class="flow-card-ctrl">
+                            <a href="javascript:void(0)" onclick="goMap('${item.name.replace(/'/g, "\\'")}')" class="flow-btn-map">📍 지도</a>
+                            <select class="flow-move-sel" onchange="moveCard(${item.id}, this.value)">
+                                <option value="wait"  ${item.status === 'wait'  ? 'selected' : ''}>Waitlist</option>
+                                <option value="day1"  ${item.status === 'day1'  ? 'selected' : ''}>Day 1</option>
+                                <option value="day2"  ${item.status === 'day2'  ? 'selected' : ''}>Day 2</option>
+                                <option value="day3"  ${item.status === 'day3'  ? 'selected' : ''}>Day 3</option>
+                                <option value="day4"  ${item.status === 'day4'  ? 'selected' : ''}>Day 4</option>
+                            </select>
+                            <button class="flow-btn-return" onclick="returnToWait(${item.id})" title="Waitlist로">↩</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // ─── SortableJS 초기화 ────────────────────────────────────────
+        function initSortable() {
+            const dayKeys = ['day1', 'day2', 'day3', 'day4', 'wait'];
+
+            dayKeys.forEach(dayKey => {
+                const el = document.getElementById('drop-' + dayKey);
+                if (!el) return;
+
+                const instance = new Sortable(el, {
+                    group: 'flow-cards',
+                    animation: 250,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                    handle: '.drag-handle',
+                    draggable: '.flow-card',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    filter: '[data-area-divider]',
+
+                    // 터치 설정
+                    delay: 120,
+                    delayOnTouchOnly: true,
+                    touchStartThreshold: 5,
+                    fallbackTolerance: 3,
+                    forceFallback: true,
+                    fallbackOnBody: true,
+                    scroll: true,
+                    scrollSensitivity: 80,
+                    scrollSpeed: 14,
+                    bubbleScroll: true,
+
+                    onStart: function() {
+                        // 드롭존 하이라이트
+                        document.querySelectorAll('.flow-drop-zone').forEach(z => z.classList.add('sortable-drag-over'));
+                        // 접혀있는 Day 펼치기
+                        dayKeys.forEach(k => {
+                            const body = document.getElementById('body-' + k);
+                            if (body && body.classList.contains('collapsed')) {
+                                body.classList.remove('collapsed');
+                                body.style.maxHeight = '9999px';
+                            }
+                        });
+                    },
+
+                    onEnd: function(evt) {
+                        document.querySelectorAll('.flow-drop-zone').forEach(z => z.classList.remove('sortable-drag-over'));
+
+                        const cardId = parseInt(evt.item.dataset.id);
+                        const newDay = evt.to.dataset.day;
+                        if (!cardId || !newDay) return;
+
+                        // 로컬 즉시 반영
+                        const idx = tripData.findIndex(t => t.id === cardId);
+                        if (idx !== -1 && tripData[idx].status !== newDay) {
+                            tripData[idx].status = newDay;
+                            moveCard(cardId, newDay);
+                        }
+                        // 같은 Day 내 순서 변경이면 re-render
+                        renderFlow();
+                    },
+                });
+
+                sortableInstances.push(instance);
+            });
+        }
+
+        // ─── 대시보드 요약 ────────────────────────────────────────────
         function updateDashboard() {
             const sum = document.getElementById('home-kanban-summary');
             if (!sum) return;
             const day1 = tripData.filter(t => t.status === 'day1');
             sum.innerHTML = day1.length
-                ? day1.map(t => `<div class="summary-item" onclick="goMap('${t.name}')">📌 ${t.name}</div>`).join('')
-                : '<div class="summary-item" style="color:#888;">일정 보드에서 Day 1로 장소를 옮겨보세요!</div>';
+                ? day1.map(t => {
+                    const meta = PLACE_META[t.name] || {};
+                    return `<div class="summary-item" onclick="goMap('${t.name}')">${meta.emoji || '📌'} ${t.name}</div>`;
+                }).join('')
+                : '<div class="summary-item" style="color:#888;">여행 플로우에서 Day 1로 장소를 옮겨보세요!</div>';
         }
 
-        // Realtime 구독 (places)
+        // ─── Realtime 구독 ────────────────────────────────────────────
         function subscribePlaces() {
             sb.channel('places-realtime')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'hongkong2026' }, payload => {
                     const { eventType, new: newRow, old: oldRow } = payload;
-                    if (eventType === 'INSERT') {
-                        tripData.push(newRow);
-                    } else if (eventType === 'UPDATE') {
+                    if (eventType === 'INSERT') tripData.push(newRow);
+                    else if (eventType === 'UPDATE') {
                         const idx = tripData.findIndex(t => t.id === newRow.id);
                         if (idx !== -1) tripData[idx] = newRow;
                     } else if (eventType === 'DELETE') {
                         tripData = tripData.filter(t => t.id !== oldRow.id);
                     }
-                    renderKanban();
+                    renderFlow();
                     setSyncStatus('ok', '실시간 연결됨');
                 })
                 .subscribe();
         }
 
         // ══════════════════════════════════════════════════════════════
-        // 체크리스트 (checklist 테이블)
+        // 체크리스트
         // ══════════════════════════════════════════════════════════════
-
         async function loadChecklist() {
             const { data, error } = await sb.from('checklist').select('*').order('created_at');
             if (error) return;
             checkData = data;
             renderChecklist();
         }
-
         async function addCheckItem() {
             const val = document.getElementById('newItem').value.trim();
             if (!val) return;
@@ -413,17 +806,14 @@
             await sb.from('checklist').insert({ text: val, done: false });
             document.getElementById('newItem').value = '';
         }
-
         async function toggleCheck(id, done) {
             setSyncStatus('loading', '업데이트 중...');
             await sb.from('checklist').update({ done: !done }).eq('id', id);
         }
-
         async function delCheck(id) {
             setSyncStatus('loading', '삭제 중...');
             await sb.from('checklist').delete().eq('id', id);
         }
-
         function renderChecklist() {
             const container = document.getElementById('checkListContainer');
             if (!container) return;
@@ -437,15 +827,12 @@
                 </div>
             `).join('');
         }
-
-        // Realtime 구독 (checklist)
         function subscribeChecklist() {
             sb.channel('checklist-realtime')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, payload => {
                     const { eventType, new: newRow, old: oldRow } = payload;
-                    if (eventType === 'INSERT') {
-                        checkData.push(newRow);
-                    } else if (eventType === 'UPDATE') {
+                    if (eventType === 'INSERT') checkData.push(newRow);
+                    else if (eventType === 'UPDATE') {
                         const idx = checkData.findIndex(c => c.id === newRow.id);
                         if (idx !== -1) checkData[idx] = newRow;
                     } else if (eventType === 'DELETE') {
@@ -458,25 +845,17 @@
         }
 
         // ══════════════════════════════════════════════════════════════
-        // 환율 (exchangerate-api 무료 tier)
+        // 환율
         // ══════════════════════════════════════════════════════════════
-        let rateKRW = null; // 1 HKD = ? KRW
-
+        let rateKRW = null;
         async function loadRates() {
             try {
-                // HKD 기준으로 불러오기
                 const res = await fetch('https://open.er-api.com/v6/latest/HKD');
                 const data = await res.json();
                 if (data.result !== 'success') throw new Error('API 오류');
-
-                const rates = data.rates;
-                rateKRW = rates.KRW; // 1 HKD = ? KRW
-
-                // KRW ↔ HKD
-                const hkdPer1000krw = (1000 / rateKRW).toFixed(2);
-                document.getElementById('rateKRWtoHKD').textContent = hkdPer1000krw;
+                rateKRW = data.rates.KRW;
+                document.getElementById('rateKRWtoHKD').textContent = (1000 / rateKRW).toFixed(2);
                 document.getElementById('rateHKDtoKRW').textContent = Math.round(rateKRW).toLocaleString();
-
                 const updatedAt = new Date(data.time_last_update_utc);
                 document.getElementById('rateUpdatedAt').textContent = '기준: ' + updatedAt.toLocaleString('ko-KR', { month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
                 document.getElementById('rateLoadingDot').textContent = '✓';
@@ -486,7 +865,6 @@
                 document.getElementById('rateLoadingDot').style.color = '#ff4d6d';
             }
         }
-
         function calcFromKRW() {
             if (!rateKRW) return;
             const krw = parseFloat(document.getElementById('calcKRW').value);
@@ -502,14 +880,13 @@
             calcFromKRW();
         }
 
-        // ─── 초기 로드 ────────────────────────────────────────────────
+        // ─── 초기화 ──────────────────────────────────────────────────
         async function init() {
             await Promise.all([loadPlaces(), loadChecklist(), loadRates()]);
             subscribePlaces();
             subscribeChecklist();
             setSyncStatus('ok', '실시간 연결됨');
         }
-
         init();
     </script>
 </body>
